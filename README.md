@@ -1,41 +1,60 @@
-# Sentinel — AI-Powered Cybersecurity Agent
+# 🛡️ Sentinel — AI-Powered Cybersecurity Agent
 
-Email threat detection, geolocation tracing, forensic analysis, and
-blockchain-verified evidence logging — all **local**, all **terminal-based**,
-no web dashboard, no browser UI.
+**Email threat detection · geolocation tracing · forensic analysis · blockchain-verified evidence logging** — all local, all terminal-native, no web dashboard.
 
-Sentinel investigates ONE `.eml` at a time using a **local LLM (Ollama)** as
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/17krishna8/project/actions/workflows/ci.yml/badge.svg)](https://github.com/17krishna8/project/actions)
+[![Local-first](https://img.shields.io/badge/local--first-no%20cloud%20required-brightgreen.svg)](#)
+
+Sentinel investigates **one `.eml` at a time** using a **local LLM (Ollama)** as
 the reasoning brain, a **tool-whitelisted** Python agent controller, a
 **Docker sandbox** for static file analysis, and a **hash-chained blockchain
-ledger** for tamper-proof evidence. It solves the classic
-**Gmail/webmail-hides-sender-IP** problem with honest, confidence-scored
-fallback logic instead of fake pins.
+ledger** for tamper-proof evidence.
+
+It uniquely combines three pillars no free/open tool combines:
+
+| 🤖 AI | 🛡️ Cybersecurity | 🔗 Blockchain |
+|---|---|---|
+| Ensemble, multi-signal judgment | 16 forensic tools + sandbox | Tamper-evident evidence log |
+
+And it honestly solves the classic **Gmail/webmail-hides-sender-IP** problem —
+with confidence-scored fallbacks instead of fake pins.
 
 ---
 
-## Architecture
+## Working architecture
 
+![Architecture diagram](docs/architecture.png)
+
+> Full write-up in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+---
+
+## The desktop pet
+
+A Comnyang-style **pixel-art guard** that lives **static** on your desktop
+(pinned to your Gmail window corner by default — it never wanders, only its
+face animates). It mirrors the agent's live state and adds chat, mail display,
+analysis, and notifications.
+
+![Sentinel pet expressions](docs/pet_contact_sheet.png)
+
+**Expressions** change with state/risk: `idle` → `investigating` → `thinking`
+(… bubble) → `tool_running` → `confirm_needed` (! bubble) → `verdict`
+(green happy hop / red alarm + shake), plus `talking`, `sleepy`, `celebrate`,
+`confused`. Body color tracks the live risk score (green→yellow→orange→red).
+
+```bash
+pip install PySide6
+python -m overlay.sentinel_pet --demo          # cycle all expressions
+python -m overlay.sentinel_pet --mail mailpit  # static pet + mail panel + chat
 ```
-[LOCAL LLM — Ollama, tool-calling]     "reasoning brain"
-        │  THINK → CHOOSE TOOL → ACT → OBSERVE
-        ▼
-[AGENT CONTROLLER — sentinel/agent.py]
-   • rich live terminal UI (colored risk, streaming reasoning)
-   • running risk score (0-100) after every tool call
-   • human confirmation gate + keypress kill-switch
-        │
-        ▼
-[TOOL LAYER — whitelisted Python only, no shell exec]
-   parse_headers · resolve_origin · geolocate_ip · check_tor_exit
-   extract_urls · check_reputation · static_file_scan · hash_evidence
-        │  (only static_file_scan touches file bytes)
-        ▼
-[SANDBOX — Docker, --network none, read-only mount, destroyed per run]
-        │
-        ▼
-[BLOCKCHAIN LEDGER — hash-chain (default) or Ganache]
-   logs ONLY {file_hash, verdict, confidence, timestamp, geo_summary}
-```
+
+- **Chat** — click the pet, type, it answers via your local Ollama in a speech bubble.
+- **Mail** — self-hosted **Mailpit** inbox (demo), screen-OCR, or a read-only
+  Gmail OAuth stub (`sentinel/mail.py`).
+- **Notifications** — OS-native toasts on new verdicts/mail.
 
 ---
 
@@ -45,149 +64,75 @@ fallback logic instead of fake pins.
 bash setup.sh                       # venv + deps (+ optional sandbox/Ollama)
 source .venv/bin/activate
 
-# Full investigation (LLM-driven; falls back to deterministic if Ollama offline)
-python run.py samples/phishing.eml
-
-# Deterministic pipeline (no Ollama needed)
+python run.py samples/phishing.eml   # full investigation (LLM, offline fallback)
 python run.py samples/bec_gmail.eml --no-llm
-
-# Verify the evidence ledger integrity
-python run.py --verify-chain
+python run.py --verify-chain         # prove the evidence ledger was never altered
 ```
 
-Sample emails in `samples/`:
-- `clean.eml` — legitimate internal mail (SAFE)
-- `phishing.eml` — brand-impersonating phish with a real, traceable sender IP
-- `bec_gmail.eml` — subtle BEC sent via **Gmail webmail** (demonstrates the
-  IP-unrecoverable fallback logic: `209.85.x.x` is a Google relay, so the
-  agent honestly reports "origin unrecoverable" and lowers confidence)
-- `malware_attachment.eml` — attachment that's an ELF binary disguised as a PDF
+Sample `.eml` fixtures in [`samples/`](samples/):
 
-## Forensic tools (real Parrot OS / REMnux binaries)
-
-Beyond the built-in Python tools, the agent can call **7 sandboxed forensic
-binaries** — the same class of tools you'd run on Parrot OS or REMnux, but
-pinned inside the network-isolated Docker sandbox so nothing touches the host:
-
-| Tool | Binary | What it finds |
+| File | Scenario | Expected |
 |---|---|---|
-| `static_file_scan` | `exiftool` + `oletools` | metadata, macros, entropy, type mismatch |
-| `binwalk_scan` | `binwalk` | embedded/concatenated files (file carving) |
-| `pdfid_scan` | `pdfid` | PDF exploits (JS, OpenAction, Launch) |
-| `capa_scan` | `capa` (FLARE) | what malware can *do* (ATT&CK techniques) |
-| `strings_scan` | `strings` | URLs/IPs/shell commands in the binary |
-| `yara_scan` | `yara` | signature matches (rules in `sandbox/yara_rules/`) |
-| `pecheck_scan` | `pecheck` | PE structural anomalies |
+| `clean.eml` | legitimate internal mail | SAFE |
+| `phishing.eml` | brand-impersonating phish | MALICIOUS |
+| `bec_gmail.eml` | BEC via Gmail webmail (IP hidden) | SUSPICIOUS |
+| `malware_attachment.eml` | ELF binary disguised as `.pdf` | MALICIOUS |
 
-Plus two host-side intel tools for **phishing-infrastructure tracing**:
-`dns_lookup` (A/MX/TXT-SPF/NS) and `whois_lookup` (registrar, age,
-privacy-protection) — both read-only public lookups.
+---
 
-All 7 forensic tools are **file-touching** → the agent requires a human
-`yes` before running them, and they execute only inside the sandbox.
+## The 16 whitelisted tools
+
+| Tool | Runs in | Purpose |
+|---|---|---|
+| `hash_evidence` | host | SHA-256 before analysis (evidence anchor) |
+| `parse_headers` | host | all `Received:` hops, SPF/DKIM |
+| `resolve_origin` | host | true sender IP + Gmail-hiding fallback |
+| `geolocate_ip` | host | multi-source geo with confidence radius |
+| `check_tor_exit` | host | Tor exit-node DNSEL check |
+| `extract_urls` | host | typosquat / brand-mismatch detection |
+| `check_reputation` | host | VirusTotal + AbuseIPDB |
+| `dns_lookup`, `whois_lookup` | host | phishing-infrastructure tracing |
+| `static_file_scan` | **sandbox** | exiftool + oletools + entropy |
+| `binwalk_scan` | **sandbox** | embedded-file carving |
+| `pdfid_scan` | **sandbox** | PDF exploit detection |
+| `capa_scan` | **sandbox** | FLARE capability detection (ATT&CK) |
+| `strings_scan` | **sandbox** | URLs/IPs/shell-command strings |
+| `yara_scan` | **sandbox** | signature matching |
+| `pecheck_scan` | **sandbox** | PE structural anomalies |
+
+The 7 sandboxed tools map to real **Parrot OS / REMnux** binaries, pinned
+inside a network-isolated container (`sandbox/Dockerfile`), each behind a
+human `[CONFIRM_NEEDED]` gate.
+
+---
+
+## Safety measures (enforced in code)
+
+1. **Tool whitelist** — the LLM only *names* tools; no `eval`/`exec`/shell.
+2. **Docker sandbox** — `--network none`, read-only, `--cap-drop ALL`,
+   non-root, destroyed per run.
+3. **Static analysis only** — attachments are never executed.
+4. **Confirmation gate** — file-touching tools wait for a human `yes`.
+5. **Hard timeouts** — 15s per tool call.
+6. **Immutable evidence** — hash before analysis; `--verify-chain` detects tampering.
+7. **Prompt-injection defense** — email content in `<EMAIL_DATA>` tags.
+8. **Kill-switch** — `q` / `x` / `ESC` aborts instantly.
+
+See [SECURITY.md](SECURITY.md) for the full security model and reporting policy.
 
 ---
 
 ## Configuration
 
-Copy `.env.example` → `.env` and fill in what you need. Everything has a safe
-local default; the only *optional* cloud bits are free-tier reputation APIs:
+Copy [`.env.example`](.env.example) → `.env`. Everything has a safe local
+default; the only *optional* cloud bits are free-tier reputation APIs:
 
 | Variable | Purpose |
 |---|---|
-| `OLLAMA_MODEL` | local model (`llama3.1:8b`, `qwen2.5:7b`) |
-| `VIRUSTOTAL_API_KEY` | VT file/domain/IP reputation |
-| `ABUSEIPDB_API_KEY` | IP abuse confidence |
+| `OLLAMA_MODEL` | local model (`llama3.1:8b`, `qwen2.5:7b`, `qwen2.5:14b`) |
+| `VIRUSTOTAL_API_KEY` / `ABUSEIPDB_API_KEY` | reputation lookups |
 | `MAXMIND_GEOLITE2_PATH` | offline GeoIP cross-validation |
 | `BLOCKCHAIN_MODE` | `hashchain` (default) or `ganache` |
-
----
-
-## Safety measures (all enforced in code)
-
-1. **Tool whitelist** — the LLM only *names* tools; `sentinel/tools/registry.py`
-   maps names to code. No `eval`/`exec`/shell.
-2. **Sandbox isolation** — `static_file_scan` runs in a one-shot container
-   with `--network none`, `--read-only`, `--cap-drop ALL`, non-root, destroyed
-   after each run.
-3. **Static analysis only** — metadata/entropy/magic/macro *parsing*; the file
-   is **never** executed or opened in the host.
-4. **Confirmation gate** — file-touching tools emit `[CONFIRM_NEEDED]` and wait
-   for a human `yes`.
-5. **Hard timeout** — every tool call is capped (`TOOL_TIMEOUT_SECONDS`, 15s).
-6. **Immutable evidence** — SHA-256 *before* analysis, appended to a
-   hash-linked ledger; `--verify-chain` proves nothing changed.
-7. **Prompt-injection defense** — email content lives inside `<EMAIL_DATA>`
-   tags; the system prompt forbids obeying anything inside them.
-8. **Kill-switch** — press `q` / `x` / `ESC` (or Ctrl+C) to abort instantly.
-
----
-
-## The desktop mascot (optional bonus UI)
-
-The one *desktop* (non-terminal) element is a small animated "guard"
-character that sits at the corner of your **Gmail** window and reacts to the
-live risk score — green/calm → yellow/alert → red/alarm. It **only covers the
-Gmail window's corner**, and it **never reads your screen, keystrokes, or
-browser content**.
-
-```bash
-pip install PySide6                      # (optional)
-python overlay/run_overlay.py --follow \
-       --risk-file /tmp/sentinel_risk.json
-```
-
-The agent publishes `{'risk': n}` to `/tmp/sentinel_risk.json` on every risk
-update; the mascot polls it and animates accordingly. On Linux/X11 it uses
-`xdotool` to find the Gmail window and snap to it; on other platforms it runs
-as a free-floating overlay.
-
-## The desktop pet (Sentinel Pet)
-
-A Comnyang-style **pixel-art guard** that lives **static** on your desktop
-(pinned to your Gmail window corner by default — it never wanders, only its
-face animates). It mirrors the agent's live state **and** adds chat, mail
-display, analysis, and notifications.
-
-```bash
-pip install PySide6
-python -m overlay.sentinel_pet --demo         # cycle all expressions
-python -m overlay.sentinel_pet --mail mailpit # static pet + mail panel
-python -m overlay.sentinel_pet --x 1200 --y 700   # pin to a fixed spot
-```
-
-**Expressions** (change by state/risk): `idle` (smile) → `investigating`
-(shield) → `thinking` (… bubble, eyes up) → `tool_running` (focused) →
-`confirm_needed` (! bubble) → `verdict` (green happy hop / red alarm+shake),
-plus `talking`, `sleepy` (zzz), `celebrate` (★), `confused` (?). Body color
-tracks the live risk score (green→yellow→orange→red).
-
-**Chat:** click the pet → type a message → it answers via your **local Ollama**
-in a speech bubble (falls back gracefully if Ollama is offline).
-
-**Mail panel + notifications:** `--mail mailpit` opens a side panel listing
-emails; select one and click **Analyze** to run the full forensics pipeline,
-then the pet fires an OS notification with the verdict.
-
-### Where the mail comes from (self-hosted, open-source)
-
-For local demo/testing — no real Gmail needed — the recommended backend is
-**Mailpit** (MIT-licensed, single Go binary, the modern MailHog successor):
-
-```bash
-docker compose up -d                    # starts Mailpit (UI+API:8025, SMTP:1025)
-python -m overlay.seed_mailpit           # sends samples/*.eml into it
-python -m overlay.sentinel_pet --mail mailpit
-```
-
-Other backends in `sentinel/mail.py`:
-- `--mail screen` — OCR the currently-visible Gmail window (needs `xdotool`
-  + ImageMagick `import` + `tesseract`). Honest about its limits.
-- `--mail gmail-oauth` — **stub** for a read-only Gmail API (OAuth), to add later.
-
-**Privacy:** all backends are read-only; the pet never records keystrokes or
-reads the screen beyond the one explicit OCR action you trigger. Chat + mail
-stay on your machine (Ollama is local).
 
 ---
 
@@ -195,33 +140,23 @@ stay on your machine (Ollama is local).
 
 ```
 run.py                     entry point
-sentinel/
-  main.py                  CLI + evidence logging + report wiring
-  agent.py                 reasoning loop + safety gates
-  llm.py                   Ollama tool-calling client
-  prompt.py                system prompt + injection defense
-  killswitch.py            keypress abort + cleanup hooks
-  risk.py                  running score tracker (+ mascot hook)
-  ui.py                    rich live terminal dashboard
-  sandbox.py               Docker isolation backend
-  report.py                forensic report writer
-  tools/                   the whitelisted tool functions
-  blockchain/              hashchain + ganache backends
-sandbox/Dockerfile         static-analysis image
-docker-compose.yml         Mailpit (self-hosted demo inbox)
-overlay/static_scan.py     runs INSIDE sandbox (read-only)
-overlay/sentinel_pet.py    static pixel pet (expressions/chat/mail/notify)
-overlay/sprites.py         pet sprite data (Qt-free, unit-testable)
-overlay/preview.py         render PNG previews of every pet state
-overlay/seed_mailpit.py    seed the demo inbox with sample emails
-samples/*.eml              clean / phishing / BEC(Gmail) / malware test cases
+sentinel/                  agent + tools + blockchain (see docs/ARCHITECTURE.md)
+sandbox/                   Dockerfile + yara_rules/
+overlay/                   sandbox scripts + desktop pet + diagram/preview renderers
+docs/                      architecture doc + diagrams
+samples/                   .eml test fixtures
+tests/                     offline test suite (14 tests)
 ```
 
-## Running a full local demo (no cloud)
+## Development
 
 ```bash
-source .venv/bin/activate
-python run.py samples/phishing.eml        # LLM + tools
-python run.py samples/bec_gmail.eml --no-llm
-python run.py --verify-chain
+pip install -r requirements-dev.txt
+python -m pytest          # runs offline — no Docker/Ollama/network needed
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) to add a tool, rule, or pet feature.
+
+## License
+
+[MIT](LICENSE) · [Changelog](CHANGELOG.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
