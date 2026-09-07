@@ -23,11 +23,6 @@ with confidence-scored fallbacks instead of fake pins.
 
 ---
 
-## Working architecture
-
-![Architecture diagram](docs/architecture.png)
-
-> Full write-up in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
