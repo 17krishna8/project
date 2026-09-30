@@ -29,6 +29,19 @@ export interface HealthInfo {
   sessions: number;
   uptimeMs: number;
   bootMs: number;
+  /** False until a spec is loaded - the dashboard then shows the upload view. */
+  specLoaded?: boolean;
+}
+
+/** What POST /__admin/spec answers after a successful upload. */
+export interface SpecUploadResult {
+  title: string;
+  version: string;
+  routes: number;
+  resources: number;
+  reloaded: boolean;
+  source: "upload" | "disk";
+  filename: string | null;
 }
 
 export interface LogEvent {
@@ -68,6 +81,35 @@ export const api = {
     });
     if (!res.ok) throw new Error(`chaos update -> ${res.status}`);
     return (await res.json()) as ChaosConfig;
+  },
+  /** Uploads a spec. Accepts the raw text, so the dashboard reads the file
+   *  itself with FileReader and never has to build a multipart body. */
+  uploadSpec: async (spec: string, filename?: string) => {
+    const res = await fetch("/__admin/spec", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ spec, ...(filename ? { filename } : {}) })
+    });
+    const payload = (await res.json().catch(() => null)) as
+      | (SpecUploadResult & { error?: { code: string; message: string; details: Array<{ path: string; reason: string }> } })
+      | null;
+    if (!res.ok) {
+      const message = payload?.error?.message ?? `upload -> ${res.status}`;
+      const error = new Error(message) as Error & {
+        code?: string;
+        details?: Array<{ path: string; reason: string }>;
+      };
+      error.code = payload?.error?.code;
+      error.details = payload?.error?.details;
+      throw error;
+    }
+    return payload as SpecUploadResult;
+  },
+  /** Asks the server to re-read the file it was started with. */
+  reloadFromDisk: async () => {
+    const res = await fetch("/__admin/spec", { method: "POST" });
+    if (!res.ok) throw new Error(`reload -> ${res.status}`);
+    return (await res.json()) as SpecUploadResult;
   }
 };
 

@@ -16,6 +16,8 @@ Token estimate when the platform number is unknown: (characters read + character
 | 2026-09-30T11:50Z | 8 | qa-auditor | multipleOf decimal fix, X-Mock-Error, error-code mapping, XSS escape, samples, demos | 240,000 | 2,186,000 |
 | 2026-09-30T12:05Z | 9 | orchestrator | README project guide, architecture diagram, PPT facts, PROGRESS/BUDGET | 110,000 | 2,296,000 |
 
+| 2026-09-30T13:15Z | 10 | DX engineer | spec upload endpoint, no-spec boot, upload view, endpoint explorer, tests + docs | 260,000 | 2,556,000 |
+
 ## Caps (playbook B7)
 
 | Phase | Cap |

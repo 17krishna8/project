@@ -34,6 +34,7 @@ Your spec *is* the mock.
 - [Session isolation](#session-isolation)
 - [Chaos engineering](#chaos-engineering)
 - [The reserved API surface](#the-reserved-api-surface)
+- [Uploading a spec](#uploading-a-spec)
 - [The dashboard](#the-dashboard)
 - [Error shape](#error-shape)
 - [Security](#security)
@@ -351,7 +352,7 @@ are registered before the catch-all, so the control plane stays clean even at
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /__health` | `{status, routes, sessions, uptimeMs, bootMs}` |
+| `GET /__health` | `{status, routes, sessions, uptimeMs, bootMs, specLoaded}` |
 | `GET /__ui` | the dashboard |
 | `GET /__admin/routes` | every inferred route: method, path, kind, resource |
 | `GET /__admin/sessions` | live sessions and their record counts |
@@ -359,7 +360,7 @@ are registered before the catch-all, so the control plane stays clean even at
 | `DELETE /__admin/sessions/:id` | drop a session (`204`, or `404`) |
 | `GET /__admin/chaos` · `PUT /__admin/chaos` | read / change the chaos settings |
 | `GET /__admin/logs` | Server-Sent Events stream of every request |
-| `POST /__admin/spec` | swap in a new spec without restarting |
+| `POST /__admin/spec` | upload a spec, or reload the file on disk |
 
 The log stream carries one JSON event per request:
 
@@ -370,10 +371,67 @@ The log stream carries one JSON event per request:
 
 ---
 
+## Uploading a spec
+
+You do not have to put a file on disk. Start the mock with **no spec at all**
+and it serves an upload view:
+
+```bash
+node packages/cli/dist/index.js --port 3000
+```
+
+```
+  MockForge v0.1.0
+  Spec:       No spec loaded v-
+  Routes:     0  (0 resources)
+  Dashboard:  http://127.0.0.1:3000/__ui
+```
+
+Browse to `/__ui` and you get the first of the two views: a drop zone for a
+`.json`, `.yaml` or `.yml` file, plus a stage-by-stage view of what happens to
+it - read, parse, validate, infer routes, serve. Nothing leaves your machine.
+
+The moment a spec is accepted, the view switches to the operating dashboard
+(routes, sessions, chaos, live log). **If the file is wrong, the dashboard never
+appears** - you stay on the upload view with the parser's own error, including
+the line and column:
+
+```
+That spec was rejected
+Spec rejected: Spec is not valid JSON or YAML: unexpected end of the stream (4:1)
+```
+
+The same thing over HTTP, which is what the dashboard calls:
+
+```bash
+curl -X POST http://127.0.0.1:3000/__admin/spec \
+  -H 'content-type: application/json' \
+  -d '{"spec":"<the file contents>","filename":"my-api.yaml"}'
+# -> {"title":"My API","version":"1.0.0","routes":8,"resources":2,
+#     "reloaded":true,"source":"upload","filename":"my-api.yaml"}
+```
+
+`POST /__admin/spec` with **no body** still means "re-read the file on disk", so
+the old hot-reload behaviour is unchanged. An upload replaces the previous spec
+in place: sessions, chaos settings and the socket all survive, and the old paths
+start answering `404`.
+
+Two limits apply, and they are enforced in this order:
+
+1. the **1 MB request-body limit** fires first, so an oversized upload is a
+   `413 MOCKFORGE_BODY_TOO_LARGE` before the parser ever sees it;
+2. the **5 MB spec limit** still guards specs read from disk.
+
 ## The dashboard
 
 `http://127.0.0.1:3000/__ui` — same origin as the API, no proxy needed.
 
+There are two views, and the server chooses between them. With no spec loaded
+you get the **upload view** (drop a file, watch the pipeline run, see the error
+if the spec is wrong). Once a spec is loaded you get the **operating view**
+below. An invalid upload never reaches the operating view.
+
+- **Try a route** — pick any endpoint, send it, see the real status, latency and body
 - **Route table** — every path the spec produced, with its kind and resource
 - **Sessions panel** — live sessions, record counts, per-session data, delete
 - **Chaos panel** — sliders for latency, error rate and the 404:500 split
@@ -536,6 +594,11 @@ checksum-locked — editing one is detected by `npm run integrity`.
 ---
 
 ## Troubleshooting
+
+**The dashboard shows the upload view but I never uploaded anything.**
+The server was started with no spec file, so it is waiting for one. Either
+upload a spec in the browser, or restart it with a path:
+`node packages/cli/dist/index.js ./your-spec.yaml`.
 
 **`Cannot find module '@mockforge/core'` when building.**
 Core must be compiled before the CLI. Always use `npm run build` from the

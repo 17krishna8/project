@@ -2,7 +2,10 @@
 import fs from "node:fs";
 import { createMockForge, listen, MOCKFORGE_VERSION, SpecError } from "@mockforge/core";
 
-const USAGE = `mockforge <specFile> [options]
+const USAGE = `mockforge [specFile] [options]
+
+  The spec file is optional: without one the server boots and the dashboard
+  opens on an upload view - POST a spec to /__admin/spec to start mocking.
 
   --port <n>            port to listen on (default 3000)
   --host <addr>         host to bind (default 127.0.0.1)
@@ -198,9 +201,9 @@ async function main(): Promise<void> {
   }
 
   if (options.specPath === "") {
-    console.error("mockforge: a spec file is required");
-    console.error(USAGE);
-    process.exit(1);
+    // No spec: boot anyway and serve the upload view at /__ui. A spec can be
+    // pushed later with POST /__admin/spec.
+    console.log("mockforge: no spec given - open the dashboard to upload one");
   }
 
   try {
@@ -213,7 +216,7 @@ async function main(): Promise<void> {
     // and the running route table is kept (a10.6).
     let watcher: fs.FSWatcher | null = null;
     let reloading = false;
-    if (options.watch) {
+    if (options.watch && options.specPath !== "") {
       try {
         watcher = fs.watch(options.specPath, () => {
           if (reloading) return;

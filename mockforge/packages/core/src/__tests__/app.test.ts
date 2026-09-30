@@ -692,3 +692,289 @@ describe("admin reload and logs", () => {
     expect(event.session).toBe("sse");
   }, 15_000);
 });
+
+describe("spec upload", () => {
+  const minimal = [
+    "openapi: 3.0.3",
+    "info:",
+    "  title: Uploaded API",
+    "  version: 9.9.9",
+    "paths:",
+    "  /widgets:",
+    "    get:",
+    "      operationId: listWidgets",
+    "      responses:",
+    "        '200':",
+    "          description: widgets",
+    "          content:",
+    "            application/json:",
+    "              schema:",
+    "                type: array",
+    "                items:",
+    "                  $ref: '#/components/schemas/Widget'",
+    "  /widgets/{widgetId}:",
+    "    parameters:",
+    "      - name: widgetId",
+    "        in: path",
+    "        required: true",
+    "        schema:",
+    "          type: string",
+    "    get:",
+    "      operationId: getWidget",
+    "      responses:",
+    "        '200':",
+    "          description: widget",
+    "          content:",
+    "            application/json:",
+    "              schema:",
+    "                $ref: '#/components/schemas/Widget'",
+    "components:",
+    "  schemas:",
+    "    Widget:",
+    "      type: object",
+    "      required: [id, name]",
+    "      properties:",
+    "        id:",
+    "          type: string",
+    "        name:",
+    "          type: string"
+  ].join("\n");
+
+  /** Boots with no spec file at all: the upload-only mode. */
+  async function bootEmpty() {
+    const forge = await createMockForge({ specPath: "" });
+    open.push(forge);
+    return forge;
+  }
+
+  it("boots with no spec and serves nothing until one is uploaded", async () => {
+    const forge = await bootEmpty();
+    expect(forge.spec.loaded).toBe(false);
+    const health = await forge.app.inject({ method: "GET", url: "/__health" });
+    expect(health.statusCode).toBe(200);
+    expect(health.json().specLoaded).toBe(false);
+    expect(health.json().routes).toBe(0);
+    // The catch-all has no routes to match yet.
+    expect((await forge.app.inject({ method: "GET", url: "/widgets" })).statusCode).toBe(404);
+  });
+
+  it("accepts an uploaded YAML spec and starts serving it", async () => {
+    const forge = await bootEmpty();
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: minimal, filename: "widgets.yaml" }
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.title).toBe("Uploaded API");
+    expect(body.version).toBe("9.9.9");
+    expect(body.routes).toBe(2);
+    expect(body.source).toBe("upload");
+    expect(forge.spec.loaded).toBe(true);
+
+    const health = await forge.app.inject({ method: "GET", url: "/__health" });
+    expect(health.json().specLoaded).toBe(true);
+
+    const list = await forge.app.inject({ method: "GET", url: "/widgets", headers: { "x-session-id": "up" } });
+    expect(list.statusCode).toBe(200);
+    const items = list.json() as Array<{ id: string; name: string }>;
+    expect(items.length).toBeGreaterThan(0);
+    expect(items[0]!.name.length).toBeGreaterThan(0);
+  });
+
+  it("accepts a JSON spec body too", async () => {
+    const forge = await bootEmpty();
+    const jsonSpec = JSON.stringify({
+      openapi: "3.0.3",
+      info: { title: "JSON Upload", version: "1.0.0" },
+      paths: {
+        "/things": {
+          get: {
+            operationId: "listThings",
+            responses: {
+              "200": {
+                description: "things",
+                content: { "application/json": { schema: { type: "array", items: { type: "object" } } } }
+              }
+            }
+          }
+        }
+      }
+    });
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: jsonSpec, filename: "things.json" }
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().title).toBe("JSON Upload");
+    expect((await forge.app.inject({ method: "GET", url: "/things", headers: { "x-session-id": "j" } })).statusCode).toBe(200);
+  });
+
+  it("rejects a malformed upload and stays unloaded", async () => {
+    const forge = await bootEmpty();
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: "openapi: 3.0.3\ninfo:\n  title: [broken", filename: "bad.yaml" }
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe("MOCKFORGE_SPEC_INVALID");
+    expect(forge.spec.loaded).toBe(false);
+    expect((await forge.app.inject({ method: "GET", url: "/__health" })).json().specLoaded).toBe(false);
+  });
+
+  it("rejects an upload that is not a spec, naming why", async () => {
+    const forge = await bootEmpty();
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: "hello: world", filename: "nope.yaml" }
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.message).toMatch(/openapi: 3\.x|swagger: "2\.0"/);
+    expect(res.json().error.details[0].reason.length).toBeGreaterThan(0);
+  });
+
+  it("rejects an upload carrying a remote $ref", async () => {
+    const forge = await bootEmpty();
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: {
+        spec: [
+          "openapi: 3.0.3",
+          "info:",
+          "  title: Remote",
+          "  version: 1.0.0",
+          "paths:",
+          "  /a:",
+          "    get:",
+          "      responses:",
+          "        '200':",
+          "          description: a",
+          "          content:",
+          "            application/json:",
+          "              schema:",
+          "                $ref: 'http://evil.example/x.yaml#/A'"
+        ].join("\n"),
+        filename: "remote.yaml"
+      }
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.message).toMatch(/non-local \$ref/i);
+    expect(forge.spec.loaded).toBe(false);
+  });
+
+  it("a >1 MB upload is stopped by the request body limit, not the spec limit", async () => {
+    const forge = await bootEmpty();
+    const huge = `openapi: 3.0.3\ninfo:\n  title: Huge\n  version: 1.0.0\n# ${"x".repeat(6 * 1024 * 1024)}\npaths: {}\n`;
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: huge, filename: "huge.yaml" }
+    });
+    // The 1 MB request-body limit fires first, so an oversized upload never
+    // reaches the loader. The 5 MB spec limit still guards file reads (a03.4).
+    expect(res.statusCode).toBe(413);
+    expect(res.json().error.code).toBe("MOCKFORGE_BODY_TOO_LARGE");
+    expect(forge.spec.loaded).toBe(false);
+  });
+
+  it("keeps an already-loaded spec when a later upload is bad", async () => {
+    const forge = await bootEmpty();
+    await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: minimal, filename: "widgets.yaml" }
+    });
+    const rejected = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: "not: [a spec", filename: "bad.yaml" }
+    });
+    expect(rejected.statusCode).toBe(400);
+    // The first spec is still serving.
+    expect(forge.spec.title).toBe("Uploaded API");
+    expect((await forge.app.inject({ method: "GET", url: "/widgets", headers: { "x-session-id": "keep" } })).statusCode).toBe(200);
+  });
+
+  it("an upload replaces the previous spec's routes", async () => {
+    const forge = await bootEmpty();
+    await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: minimal, filename: "widgets.yaml" }
+    });
+    expect((await forge.app.inject({ method: "GET", url: "/widgets", headers: { "x-session-id": "a" } })).statusCode).toBe(200);
+
+    const second = [
+      "openapi: 3.0.3",
+      "info:",
+      "  title: Second API",
+      "  version: 2.0.0",
+      "paths:",
+      "  /gadgets:",
+      "    get:",
+      "      operationId: listGadgets",
+      "      responses:",
+      "        '200':",
+      "          description: gadgets",
+      "          content:",
+      "            application/json:",
+      "              schema:",
+      "                type: array",
+      "                items:",
+      "                  type: object"
+    ].join("\n");
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: second, filename: "gadgets.yaml" }
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().title).toBe("Second API");
+    expect((await forge.app.inject({ method: "GET", url: "/gadgets", headers: { "x-session-id": "a" } })).statusCode).toBe(200);
+    // The old shape is gone.
+    expect((await forge.app.inject({ method: "GET", url: "/widgets", headers: { "x-session-id": "a" } })).statusCode).toBe(404);
+  });
+
+  it("a body with no spec content still reloads from disk", async () => {
+    const forge = await bootEmpty();
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: {}
+    });
+    // No file was given at boot, so there is nothing to reload.
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe("MOCKFORGE_SPEC_INVALID");
+    expect(forge.spec.loaded).toBe(false);
+  });
+
+  it("the uploaded spec survives validation in dev mode", async () => {
+    const forge = await createMockForge({ specPath: "", mode: "dev" });
+    open.push(forge);
+    await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      headers: { "content-type": "application/json" },
+      payload: { spec: minimal, filename: "widgets.yaml" }
+    });
+    const list = await forge.app.inject({ method: "GET", url: "/widgets", headers: { "x-session-id": "devmode" } });
+    expect(list.statusCode).toBe(200);
+    expect(list.headers["x-mockforge-mode"]).toBe("dev");
+  });
+});

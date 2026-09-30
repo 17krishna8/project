@@ -5,7 +5,7 @@ import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest }
 import { generateRecord } from "../generator/generate.js";
 import { createRandom, hashString } from "../generator/random.js";
 import { SpecError } from "../spec/errors.js";
-import { parseSpecFile, validateSpecDocument, type SpecVersion } from "../spec/loader.js";
+import { parseSpecFile, parseSpecText, validateSpecDocument, type SpecVersion } from "../spec/loader.js";
 import { inferRoutes } from "../spec/routes.js";
 import { DEFAULT_STORE_OPTIONS, Store, type StoreOptions } from "../state/store.js";
 import type {
@@ -220,22 +220,28 @@ export function allowedMethods(routes: Route[], path: string): string[] {
   return [...allowed].sort();
 }
 
-/** Builds the mock server for a spec. Throws SpecError for invalid specs. */
+/** Builds the mock server for a spec. Throws SpecError for invalid specs.
+ *  An empty specPath boots with no routes: the dashboard then shows the upload
+ *  view until a spec is supplied over POST /__admin/spec. */
 export async function createMockForge(options: CreateOptions): Promise<MockForgeApp> {
   const startedAt = Date.now();
-  const { document, specVersion } = parseSpecFile(options.specPath);
-  await validateSpecDocument(document);
-  const inferred = inferRoutes(document, specVersion);
+  const hasSpec = options.specPath !== "";
+  const { document, specVersion } = hasSpec
+    ? parseSpecFile(options.specPath)
+    : { document: {} as Record<string, unknown>, specVersion: "openapi3" as SpecVersion };
+  if (hasSpec) await validateSpecDocument(document);
+  const inferred = hasSpec ? inferRoutes(document, specVersion) : { routes: [], resources: [] };
 
   const info = (document.info ?? {}) as Record<string, unknown>;
   const spec: SpecInfo = {
-    title: typeof info.title === "string" ? info.title : "Untitled API",
-    version: typeof info.version === "string" ? info.version : "0.0.0",
+    title: typeof info.title === "string" ? info.title : hasSpec ? "Untitled API" : "No spec loaded",
+    version: typeof info.version === "string" ? info.version : hasSpec ? "0.0.0" : "-",
     specVersion,
     routes: inferred.routes,
     resources: inferred.resources,
     document,
-    sourcePath: options.specPath
+    sourcePath: options.specPath,
+    loaded: hasSpec
   };
 
   const storeOptions: StoreOptions = {
@@ -297,7 +303,10 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
     routes: spec.routes.length,
     sessions: store.sessions.size,
     uptimeMs: Date.now() - startedAt,
-    bootMs: runtime.bootMs
+    bootMs: runtime.bootMs,
+    // False until a spec arrives (a server started with no spec file). The
+    // dashboard shows the upload view until this flips to true.
+    specLoaded: spec.loaded
   }));
 
   app.get("/__admin/routes", async () =>
@@ -354,14 +363,100 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
 
   // Hot reload: re-read the spec from disk. An invalid file must leave the
   // current route table serving (a10.5).
-  app.post("/__admin/spec", async (_request: FastifyRequest, reply: FastifyReply) => {
+  /** Parses, validates and applies a spec. Accepts the content itself (an
+   *  upload) or, with no body, re-reads the file the server was started with.
+   *  Throws SpecError, leaving the current routes intact, on anything invalid. */
+  const applySpec = async (input: {
+    content?: string;
+    filename?: string;
+    fromDisk: boolean;
+  }): Promise<{ title: string; version: string; routes: number; resources: number }> => {
+    const { document: nextDocument, specVersion: nextVersion } = input.fromDisk
+      ? parseSpecFile(options.specPath)
+      : parseSpecText(input.content ?? "", input.filename);
+    await validateSpecDocument(nextDocument);
+    const nextInferred = inferRoutes(nextDocument, nextVersion);
+    const nextInfo = (nextDocument.info ?? {}) as Record<string, unknown>;
+    reload({
+      routes: nextInferred.routes,
+      resources: nextInferred.resources,
+      title: typeof nextInfo.title === "string" ? nextInfo.title : spec.title,
+      version: typeof nextInfo.version === "string" ? nextInfo.version : spec.version,
+      document: nextDocument
+    });
+    return {
+      title: spec.title,
+      version: spec.version,
+      routes: spec.routes.length,
+      resources: spec.resources.length
+    };
+  };
+
+  const reloadFromDisk = async (): Promise<{ title: string; version: string; routes: number }> =>
+    applySpec({ fromDisk: true });
+
+  /** Extracts the spec text from an upload. Two shapes are accepted:
+   *  {spec: "<yaml or json text>"} as JSON, or multipart/form-data with a
+   *  `spec` file part. */
+  const extractUpload = (request: FastifyRequest): { content: string; filename?: string } | null => {
+    const contentType = request.headers["content-type"] ?? "";
+    if (contentType.startsWith("multipart/form-data")) {
+      const part = (request.body as { spec?: unknown } | undefined)?.spec;
+      if (part && typeof part === "object" && "toBuffer" in part) {
+        // @fastify/multipart hands back a file stream; buffer it synchronously
+        // is not possible, so this branch is only reached when the plugin is
+        // present. Without it we fall through to the JSON shape below.
+        return null;
+      }
+      if (typeof part === "string") return { content: part };
+      return null;
+    }
+    const body = request.body as { spec?: unknown; content?: unknown; filename?: unknown } | undefined;
+    if (typeof body?.spec === "string") {
+      return {
+        content: body.spec,
+        filename: typeof body.filename === "string" ? body.filename : undefined
+      };
+    }
+    if (typeof body?.content === "string") return { content: body.content };
+    return null;
+  };
+
+  app.post("/__admin/spec", async (request: FastifyRequest, reply: FastifyReply) => {
+    const upload = extractUpload(request);
+    // Nothing that looks like spec content: the documented behaviour is to
+    // re-read the file the server was started with. An empty body, or a body
+    // with no spec/content key, both count.
+    const looksLikeUpload = upload !== null && upload.content.trim() !== "";
+    if (!looksLikeUpload) {
+      try {
+        const summary = await reloadFromDisk();
+        return reply.send({ ...summary, reloaded: true, source: "disk" });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return sendError(reply, 400, "MOCKFORGE_SPEC_INVALID", `Reload rejected: ${message}`, [
+          { path: spec.sourcePath, reason: message }
+        ]);
+      }
+    }
+
+    if (!upload) {
+      return sendError(
+        reply,
+        400,
+        "MOCKFORGE_SPEC_INVALID",
+        "Send the spec as {spec: \"<yaml or json text>\"}, or post nothing to reload the file on disk",
+        []
+      );
+    }
+
     try {
-      const summary = await reloadFromDisk();
-      return reply.send({ ...summary, reloaded: true });
+      const summary = await applySpec({ ...upload, fromDisk: false });
+      return reply.send({ ...summary, reloaded: true, source: "upload", filename: upload.filename ?? null });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return sendError(reply, 400, "MOCKFORGE_SPEC_INVALID", `Reload rejected: ${message}`, [
-        { path: spec.sourcePath, reason: message }
+      return sendError(reply, 400, "MOCKFORGE_SPEC_INVALID", `Spec rejected: ${message}`, [
+        { path: upload.filename ?? "$", reason: message }
       ]);
     }
   });
@@ -749,27 +844,11 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
     spec.resources = next.resources;
     spec.title = next.title;
     spec.version = next.version;
+    spec.loaded = true;
     if (next.document) {
       spec.document = next.document;
       validator = new SpecValidator(next.document);
     }
-  };
-
-  /** Re-reads the spec from disk and swaps the route table. Throws SpecError
-   *  when the file is missing or invalid, leaving the current routes intact. */
-  const reloadFromDisk = async (): Promise<{ title: string; version: string; routes: number }> => {
-    const { document: nextDocument, specVersion: nextVersion } = parseSpecFile(options.specPath);
-    await validateSpecDocument(nextDocument);
-    const nextInferred = inferRoutes(nextDocument, nextVersion);
-    const nextInfo = (nextDocument.info ?? {}) as Record<string, unknown>;
-    reload({
-      routes: nextInferred.routes,
-      resources: nextInferred.resources,
-      title: typeof nextInfo.title === "string" ? nextInfo.title : spec.title,
-      version: typeof nextInfo.version === "string" ? nextInfo.version : spec.version,
-      document: nextDocument
-    });
-    return { title: spec.title, version: spec.version, routes: spec.routes.length };
   };
 
   return {

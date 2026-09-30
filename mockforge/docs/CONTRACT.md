@@ -159,3 +159,17 @@ mockforge <specFile> [--port 3000] [--host 127.0.0.1] [--latency 0] [--error-rat
     `apps/dashboard/dist` exists; when it does not, the server renders a
     self-contained page with the same features (route table, sessions, chaos
     controls, SSE log stream). A missing build is never a blank screen.
+18. **Spec upload.** `POST /__admin/spec` accepts the spec content itself, as
+    `{spec: "<yaml or json text>", filename?: "..."}`, and swaps the route table
+    in place - the same reload path a file change takes, so sessions, chaos
+    settings and the listening socket survive. A body with no `spec`/`content`
+    key (including an empty body) still means "re-read the file on disk", so the
+    hot-reload contract is unchanged. An invalid upload is
+    `400 MOCKFORGE_SPEC_INVALID` naming the parser's own line and column, and the
+    previously loaded spec keeps serving.
+19. **Booting with no spec.** An empty spec path is legal: the server starts with
+    zero routes and `/__health` reports `specLoaded: false`. The dashboard then
+    shows its upload view and only switches to the operating view once a spec has
+    been accepted, so a rejected file never produces a half-working dashboard.
+    Upload size is bounded by the 1 MB request-body limit before the 5 MB spec
+    limit is reached.

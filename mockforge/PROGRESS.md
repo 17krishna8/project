@@ -14,6 +14,7 @@ Current phase: see `PHASE_CURRENT`.
 | 7 | Dashboard and CLI | UI engineer | a11 | DONE |
 | 8 | Hardening | qa-auditor | a12 | DONE |
 | 9 | Release | orchestrator | all | DONE |
+| 10 | Spec upload | DX | - | DONE |
 
 ## Phase 0 - Harness
 
@@ -358,6 +359,68 @@ $ npm run acceptance
 $ npm run integrity                               -> INTEGRITY: OK
 $ ./demos/demo.sh samples/orders.json             -> 10 steps, all 200/201/204/400/404 as expected
 $ ./demos/spec-swap.sh                            -> "reloaded ... - Gadgets API v2.0.0, 2 routes"
+```
+
+## Phase 10 - Spec upload (DX)
+
+The request: let the user upload a YAML/JSON file instead of putting it on disk,
+and gate the dashboard on the spec being valid.
+
+- `spec/loader.ts` split: `parseSpecFile` now delegates to a new
+  `parseSpecText`, so an in-memory spec goes through exactly the same size cap,
+  duplicate-key handling, version detection and remote-`$ref` rejection as a
+  file on disk. One code path, no second parser to drift.
+- `createMockForge` accepts an empty `specPath`: it boots with zero routes and
+  `spec.loaded === false`. `/__health` reports `specLoaded`, which is the switch
+  the dashboard uses.
+- `POST /__admin/spec` now accepts `{spec: "<text>", filename?}` and swaps the
+  route table through the same `applySpec` path a file reload uses. A body with
+  no spec content (including `{}`) still re-reads from disk, so the existing
+  hot-reload contract is unchanged - the acceptance suite proved this, since
+  `a10.6` posts `{}` and would otherwise have broken.
+- The dashboard gained two views. **No spec loaded** -> the upload view: a drop
+  zone, a file picker, and the five-stage pipeline (read, parse, validate, infer
+  routes, serve) lighting up as the upload progresses. A rejected spec shows the
+  parser's own message with line and column and keeps you on that view.
+  **Spec loaded** -> the operating dashboard, now with a **Try a route** bench:
+  pick any endpoint, send it, see the real status, latency and body.
+- Two limits, in order: the 1 MB request-body limit fires before the 5 MB spec
+  limit, so an oversized upload is `413 MOCKFORGE_BODY_TOO_LARGE` and never
+  reaches the parser. Documented rather than papered over.
+
+Two decisions recorded in `docs/CONTRACT.md` (18, 19): the upload contract and
+the no-spec boot.
+
+### Phase 10 receipts (2026-09-30)
+
+```
+$ npm run lint / typecheck / build                -> exit 0
+$ npm run test:coverage
+  Test Files  10 passed (10)    Tests  229 passed (229)
+  All files | 92.16 stmts | 84.3 branches | 95.91 funcs
+$ npm run acceptance
+  Test Files  11 passed (11)    Tests  65 passed (65)
+$ npm run integrity                               -> INTEGRITY: OK
+
+# boot with no spec
+$ node packages/cli/dist/index.js --port 3500
+  Spec:  No spec loaded v-     Routes: 0 (0 resources)
+$ curl /__health      -> {"routes":0,"specLoaded":false}
+
+# upload a Swagger 2.0 JSON spec
+$ curl -X POST /__admin/spec -d '{"spec":"...orders.json...","filename":"orders.json"}'
+  -> {"title":"Orders API","version":"3.0.1","routes":5,"resources":1,"source":"upload"}
+$ curl /__health      -> {"routes":5,"specLoaded":true}
+$ curl /orders?limit=2
+  -> {"id":"ord_y4afXEg","status":"cancelled","total":234675.65}
+
+# a bad spec keeps you on the upload view
+$ curl -X POST /__admin/spec -d '{"spec":"openapi: 3.0.3\ninfo:\n  title: [broken"}'
+  -> 400 MOCKFORGE_SPEC_INVALID "Spec is not valid JSON or YAML: unexpected end of the stream (4:1)"
+$ curl /__health      -> {"routes":0,"specLoaded":false}
+
+# an upload larger than 1 MB never reaches the parser
+$ curl -X POST /__admin/spec -d '{"spec":"<6 MB>"}'   -> 413 MOCKFORGE_BODY_TOO_LARGE
 ```
 
 ## Phase 9 - Release (orchestrator)

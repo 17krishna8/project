@@ -77,6 +77,20 @@ export function parseSpecFile(specPath: string): LoadedDocument {
   }
 
   const text = readFileSync(specPath, "utf8");
+  return parseSpecText(text, specPath);
+}
+
+/** Parses spec content that is already in memory - the same rules as reading a
+ *  file, so an uploaded spec and a spec on disk are treated identically. */
+export function parseSpecText(text: string, sourceLabel = "uploaded spec"): LoadedDocument {
+  if (Buffer.byteLength(text, "utf8") > MAX_SPEC_BYTES) {
+    const size = Buffer.byteLength(text, "utf8");
+    throw new SpecError(
+      `${sourceLabel} is ${(size / 1024 / 1024).toFixed(1)} MB, over the 5 MB limit`,
+      "$.file"
+    );
+  }
+
   let document: Record<string, unknown>;
   try {
     // `json: true` makes js-yaml tolerate duplicate mapping keys with last-wins,

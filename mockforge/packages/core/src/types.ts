@@ -95,6 +95,8 @@ export interface SpecInfo {
   /** Validated raw document, kept for local $ref resolution. */
   document: Record<string, unknown>;
   sourcePath: string;
+  /** False until a spec has been loaded - the dashboard then shows the upload view. */
+  loaded: boolean;
 }
 
 export interface ChaosConfig {
