@@ -417,7 +417,6 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
 
   app.get("/__admin/chaos", async (_request: FastifyRequest, reply: FastifyReply) => reply.send({ ...chaos }));
 
-<<<<<<< HEAD
   // Hot reload: re-read the spec from disk. An invalid file must leave the
   // current route table serving (a10.5).
   /** Parses, validates and applies a spec. Accepts the content itself (an
@@ -536,7 +535,7 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
     try {
       if (upload && upload.content.trim().length > 0) {
         const summary = await applySpec({ ...upload, fromDisk: false });
-        return reply.send({ ...summary, reloaded: true, source: upload.filename ? `uploaded:${upload.filename}` : "upload" });
+        return reply.send({ ...summary, reloaded: true, source: "upload", filename: upload.filename ?? null });
       }
 
       if (typeof body.sample === "string" && body.sample.trim().length > 0) {
