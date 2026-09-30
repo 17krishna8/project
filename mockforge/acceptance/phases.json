@@ -1,0 +1,14 @@
+{
+  "a01-boot-and-routes": 2,
+  "a02-swagger2-parity": 2,
+  "a03-spec-robustness": 2,
+  "a04-semantic-data": 3,
+  "a05-crud": 4,
+  "a06-session-isolation": 4,
+  "a07-limits": 4,
+  "a08-chaos": 5,
+  "a09-validation": 5,
+  "a10-admin-and-reload": 6,
+  "a11-ui-and-cli": 7,
+  "a12-hardening": 8
+}

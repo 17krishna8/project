@@ -1,0 +1,230 @@
+openapi: 3.0.3
+info:
+  title: Blog API
+  version: 2.1.0
+  description: Posts and authors. Good for exercising sorting, filtering and PUT vs PATCH.
+paths:
+  /authors:
+    get:
+      operationId: listAuthors
+      summary: List authors
+      responses:
+        '200':
+          description: Authors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Author'
+    post:
+      operationId: createAuthor
+      summary: Create an author
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+  /authors/{authorId}:
+    parameters:
+      - name: authorId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getAuthor
+      summary: Read one author
+      responses:
+        '200':
+          description: An author
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+    delete:
+      operationId: deleteAuthor
+      summary: Delete an author
+      responses:
+        '204':
+          description: Deleted
+  /posts:
+    get:
+      operationId: listPosts
+      summary: List posts
+      parameters:
+        - name: published
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: Posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+    post:
+      operationId: createPost
+      summary: Create a post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+  /posts/{postId}:
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getPost
+      summary: Read one post
+      responses:
+        '200':
+          description: A post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+    put:
+      operationId: replacePost
+      summary: Replace a post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+components:
+  schemas:
+    Author:
+      type: object
+      required: [id, name, email, joinedAt]
+      properties:
+        id:
+          type: string
+          pattern: '^aut_[A-Za-z0-9]{6,12}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 60
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          pattern: '^(\+91)?[6-9]\d{9}$'
+        bio:
+          type: string
+          maxLength: 240
+        joinedAt:
+          type: string
+          format: date-time
+    AuthorCreate:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 60
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          pattern: '^(\+91)?[6-9]\d{9}$'
+        bio:
+          type: string
+          maxLength: 240
+    Post:
+      type: object
+      required: [id, title, slug, published, views, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^pst_[A-Za-z0-9]{6,12}$'
+        title:
+          type: string
+          minLength: 5
+          maxLength: 120
+        slug:
+          type: string
+          pattern: '^[a-z0-9-]{5,80}$'
+        body:
+          type: string
+          maxLength: 2000
+        published:
+          type: boolean
+        views:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+        tags:
+          type: array
+          maxItems: 5
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+    PostCreate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 120
+        body:
+          type: string
+          maxLength: 2000
+        published:
+          type: boolean
+        tags:
+          type: array
+          maxItems: 5
+          items:
+            type: string

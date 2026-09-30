@@ -1,0 +1,4658 @@
+openapi: 3.0.3
+info:
+  title: Big API
+  version: 1.0.0
+  description: 50 resources, 200 operations - boot-time fixture.
+paths:
+  /res0:
+    get:
+      operationId: listres0
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res0'
+    post:
+      operationId: createres0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res0Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res0'
+  /res0/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres0
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res0'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres0
+      responses:
+        '204':
+          description: deleted
+  /res1:
+    get:
+      operationId: listres1
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res1'
+    post:
+      operationId: createres1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res1Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res1'
+  /res1/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres1
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res1'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres1
+      responses:
+        '204':
+          description: deleted
+  /res2:
+    get:
+      operationId: listres2
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res2'
+    post:
+      operationId: createres2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res2Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res2'
+  /res2/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres2
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res2'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres2
+      responses:
+        '204':
+          description: deleted
+  /res3:
+    get:
+      operationId: listres3
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res3'
+    post:
+      operationId: createres3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res3Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res3'
+  /res3/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres3
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res3'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres3
+      responses:
+        '204':
+          description: deleted
+  /res4:
+    get:
+      operationId: listres4
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res4'
+    post:
+      operationId: createres4
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res4Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res4'
+  /res4/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres4
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res4'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres4
+      responses:
+        '204':
+          description: deleted
+  /res5:
+    get:
+      operationId: listres5
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res5'
+    post:
+      operationId: createres5
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res5Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res5'
+  /res5/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres5
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res5'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres5
+      responses:
+        '204':
+          description: deleted
+  /res6:
+    get:
+      operationId: listres6
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res6'
+    post:
+      operationId: createres6
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res6Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res6'
+  /res6/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres6
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res6'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres6
+      responses:
+        '204':
+          description: deleted
+  /res7:
+    get:
+      operationId: listres7
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res7'
+    post:
+      operationId: createres7
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res7Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res7'
+  /res7/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres7
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res7'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres7
+      responses:
+        '204':
+          description: deleted
+  /res8:
+    get:
+      operationId: listres8
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res8'
+    post:
+      operationId: createres8
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res8Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res8'
+  /res8/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres8
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res8'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres8
+      responses:
+        '204':
+          description: deleted
+  /res9:
+    get:
+      operationId: listres9
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res9'
+    post:
+      operationId: createres9
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res9Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res9'
+  /res9/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres9
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res9'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres9
+      responses:
+        '204':
+          description: deleted
+  /res10:
+    get:
+      operationId: listres10
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res10'
+    post:
+      operationId: createres10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res10Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res10'
+  /res10/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres10
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res10'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres10
+      responses:
+        '204':
+          description: deleted
+  /res11:
+    get:
+      operationId: listres11
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res11'
+    post:
+      operationId: createres11
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res11Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res11'
+  /res11/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres11
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res11'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres11
+      responses:
+        '204':
+          description: deleted
+  /res12:
+    get:
+      operationId: listres12
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res12'
+    post:
+      operationId: createres12
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res12Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res12'
+  /res12/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres12
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res12'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres12
+      responses:
+        '204':
+          description: deleted
+  /res13:
+    get:
+      operationId: listres13
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res13'
+    post:
+      operationId: createres13
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res13Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res13'
+  /res13/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres13
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res13'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres13
+      responses:
+        '204':
+          description: deleted
+  /res14:
+    get:
+      operationId: listres14
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res14'
+    post:
+      operationId: createres14
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res14Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res14'
+  /res14/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres14
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res14'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres14
+      responses:
+        '204':
+          description: deleted
+  /res15:
+    get:
+      operationId: listres15
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res15'
+    post:
+      operationId: createres15
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res15Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res15'
+  /res15/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres15
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res15'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres15
+      responses:
+        '204':
+          description: deleted
+  /res16:
+    get:
+      operationId: listres16
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res16'
+    post:
+      operationId: createres16
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res16Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res16'
+  /res16/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres16
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res16'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres16
+      responses:
+        '204':
+          description: deleted
+  /res17:
+    get:
+      operationId: listres17
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res17'
+    post:
+      operationId: createres17
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res17Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res17'
+  /res17/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres17
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res17'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres17
+      responses:
+        '204':
+          description: deleted
+  /res18:
+    get:
+      operationId: listres18
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res18'
+    post:
+      operationId: createres18
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res18Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res18'
+  /res18/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres18
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res18'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres18
+      responses:
+        '204':
+          description: deleted
+  /res19:
+    get:
+      operationId: listres19
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res19'
+    post:
+      operationId: createres19
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res19Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res19'
+  /res19/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres19
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res19'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres19
+      responses:
+        '204':
+          description: deleted
+  /res20:
+    get:
+      operationId: listres20
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res20'
+    post:
+      operationId: createres20
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res20Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res20'
+  /res20/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres20
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res20'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres20
+      responses:
+        '204':
+          description: deleted
+  /res21:
+    get:
+      operationId: listres21
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res21'
+    post:
+      operationId: createres21
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res21Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res21'
+  /res21/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres21
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res21'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres21
+      responses:
+        '204':
+          description: deleted
+  /res22:
+    get:
+      operationId: listres22
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res22'
+    post:
+      operationId: createres22
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res22Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res22'
+  /res22/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres22
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res22'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres22
+      responses:
+        '204':
+          description: deleted
+  /res23:
+    get:
+      operationId: listres23
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res23'
+    post:
+      operationId: createres23
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res23Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res23'
+  /res23/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres23
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res23'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres23
+      responses:
+        '204':
+          description: deleted
+  /res24:
+    get:
+      operationId: listres24
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res24'
+    post:
+      operationId: createres24
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res24Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res24'
+  /res24/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres24
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res24'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres24
+      responses:
+        '204':
+          description: deleted
+  /res25:
+    get:
+      operationId: listres25
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res25'
+    post:
+      operationId: createres25
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res25Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res25'
+  /res25/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres25
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res25'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres25
+      responses:
+        '204':
+          description: deleted
+  /res26:
+    get:
+      operationId: listres26
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res26'
+    post:
+      operationId: createres26
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res26Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res26'
+  /res26/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres26
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res26'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres26
+      responses:
+        '204':
+          description: deleted
+  /res27:
+    get:
+      operationId: listres27
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res27'
+    post:
+      operationId: createres27
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res27Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res27'
+  /res27/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres27
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res27'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres27
+      responses:
+        '204':
+          description: deleted
+  /res28:
+    get:
+      operationId: listres28
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res28'
+    post:
+      operationId: createres28
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res28Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res28'
+  /res28/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres28
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res28'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres28
+      responses:
+        '204':
+          description: deleted
+  /res29:
+    get:
+      operationId: listres29
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res29'
+    post:
+      operationId: createres29
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res29Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res29'
+  /res29/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres29
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res29'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres29
+      responses:
+        '204':
+          description: deleted
+  /res30:
+    get:
+      operationId: listres30
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res30'
+    post:
+      operationId: createres30
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res30Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res30'
+  /res30/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres30
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res30'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres30
+      responses:
+        '204':
+          description: deleted
+  /res31:
+    get:
+      operationId: listres31
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res31'
+    post:
+      operationId: createres31
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res31Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res31'
+  /res31/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres31
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res31'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres31
+      responses:
+        '204':
+          description: deleted
+  /res32:
+    get:
+      operationId: listres32
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res32'
+    post:
+      operationId: createres32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res32Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res32'
+  /res32/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres32
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res32'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres32
+      responses:
+        '204':
+          description: deleted
+  /res33:
+    get:
+      operationId: listres33
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res33'
+    post:
+      operationId: createres33
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res33Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res33'
+  /res33/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres33
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res33'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres33
+      responses:
+        '204':
+          description: deleted
+  /res34:
+    get:
+      operationId: listres34
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res34'
+    post:
+      operationId: createres34
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res34Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res34'
+  /res34/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres34
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res34'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres34
+      responses:
+        '204':
+          description: deleted
+  /res35:
+    get:
+      operationId: listres35
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res35'
+    post:
+      operationId: createres35
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res35Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res35'
+  /res35/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres35
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res35'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres35
+      responses:
+        '204':
+          description: deleted
+  /res36:
+    get:
+      operationId: listres36
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res36'
+    post:
+      operationId: createres36
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res36Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res36'
+  /res36/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres36
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res36'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres36
+      responses:
+        '204':
+          description: deleted
+  /res37:
+    get:
+      operationId: listres37
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res37'
+    post:
+      operationId: createres37
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res37Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res37'
+  /res37/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres37
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res37'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres37
+      responses:
+        '204':
+          description: deleted
+  /res38:
+    get:
+      operationId: listres38
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res38'
+    post:
+      operationId: createres38
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res38Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res38'
+  /res38/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres38
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res38'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres38
+      responses:
+        '204':
+          description: deleted
+  /res39:
+    get:
+      operationId: listres39
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res39'
+    post:
+      operationId: createres39
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res39Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res39'
+  /res39/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres39
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res39'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres39
+      responses:
+        '204':
+          description: deleted
+  /res40:
+    get:
+      operationId: listres40
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res40'
+    post:
+      operationId: createres40
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res40Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res40'
+  /res40/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres40
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res40'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres40
+      responses:
+        '204':
+          description: deleted
+  /res41:
+    get:
+      operationId: listres41
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res41'
+    post:
+      operationId: createres41
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res41Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res41'
+  /res41/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres41
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res41'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres41
+      responses:
+        '204':
+          description: deleted
+  /res42:
+    get:
+      operationId: listres42
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res42'
+    post:
+      operationId: createres42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res42Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res42'
+  /res42/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres42
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res42'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres42
+      responses:
+        '204':
+          description: deleted
+  /res43:
+    get:
+      operationId: listres43
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res43'
+    post:
+      operationId: createres43
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res43Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res43'
+  /res43/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres43
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res43'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres43
+      responses:
+        '204':
+          description: deleted
+  /res44:
+    get:
+      operationId: listres44
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res44'
+    post:
+      operationId: createres44
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res44Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res44'
+  /res44/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres44
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res44'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres44
+      responses:
+        '204':
+          description: deleted
+  /res45:
+    get:
+      operationId: listres45
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res45'
+    post:
+      operationId: createres45
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res45Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res45'
+  /res45/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres45
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res45'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres45
+      responses:
+        '204':
+          description: deleted
+  /res46:
+    get:
+      operationId: listres46
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res46'
+    post:
+      operationId: createres46
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res46Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res46'
+  /res46/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres46
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res46'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres46
+      responses:
+        '204':
+          description: deleted
+  /res47:
+    get:
+      operationId: listres47
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res47'
+    post:
+      operationId: createres47
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res47Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res47'
+  /res47/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres47
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res47'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres47
+      responses:
+        '204':
+          description: deleted
+  /res48:
+    get:
+      operationId: listres48
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res48'
+    post:
+      operationId: createres48
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res48Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res48'
+  /res48/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres48
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res48'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres48
+      responses:
+        '204':
+          description: deleted
+  /res49:
+    get:
+      operationId: listres49
+      responses:
+        '200':
+          description: list
+          headers:
+            X-Total-Count:
+              description: total
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/res49'
+    post:
+      operationId: createres49
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/res49Create'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res49'
+  /res49/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getres49
+      responses:
+        '200':
+          description: one
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/res49'
+        '404':
+          description: unknown id
+    delete:
+      operationId: deleteres49
+      responses:
+        '204':
+          description: deleted
+components:
+  schemas:
+    res0:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res0_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res0Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res1:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res1_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res1Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res2:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res2_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res2Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res3:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res3_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res3Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res4:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res4_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res4Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res5:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res5_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res5Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res6:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res6_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res6Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res7:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res7_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res7Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res8:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res8_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res8Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res9:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res9_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res9Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res10:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res10_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res10Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res11:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res11_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res11Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res12:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res12_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res12Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res13:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res13_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res13Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res14:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res14_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res14Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res15:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res15_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res15Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res16:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res16_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res16Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res17:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res17_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res17Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res18:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res18_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res18Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res19:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res19_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res19Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res20:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res20_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res20Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res21:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res21_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res21Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res22:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res22_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res22Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res23:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res23_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res23Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res24:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res24_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res24Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res25:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res25_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res25Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res26:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res26_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res26Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res27:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res27_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res27Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res28:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res28_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res28Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res29:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res29_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res29Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res30:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res30_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res30Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res31:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res31_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res31Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res32:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res32_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res32Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res33:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res33_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res33Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res34:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res34_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res34Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res35:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res35_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res35Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res36:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res36_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res36Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res37:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res37_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res37Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res38:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res38_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res38Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res39:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res39_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res39Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res40:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res40_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res40Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res41:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res41_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res41Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res42:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res42_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res42Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res43:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res43_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res43Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res44:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res44_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res44Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res45:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res45_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res45Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res46:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res46_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res46Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res47:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res47_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res47Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res48:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res48_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res48Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+    res49:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^res49_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]
+        createdAt:
+          type: string
+          format: date-time
+    res49Create:
+      type: object
+      required: [name, email]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 40
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, blocked]

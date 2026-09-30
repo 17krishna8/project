@@ -1,0 +1,8 @@
+# The human owns the gates. agent/* branches may not change these paths
+# (enforced by .github/workflows/integrity.yml).
+*                       @17krishna8
+/acceptance/            @17krishna8
+/.github/               @17krishna8
+/scripts/integrity/     @17krishna8
+/PHASE_CURRENT          @17krishna8
+/AGENT_PLAYBOOK.md      @17krishna8

@@ -1,0 +1,136 @@
+openapi: 3.0.3
+info:
+  title: Tasks API
+  version: 1.0.0
+  description: A tiny API used by the MockForge quick start.
+paths:
+  /tasks:
+    get:
+      operationId: listTasks
+      summary: List tasks
+      parameters:
+        - name: done
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: A page of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      operationId: createTask
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+  /tasks/{taskId}:
+    parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getTask
+      summary: Read one task
+      responses:
+        '200':
+          description: A task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Unknown task
+    patch:
+      operationId: updateTask
+      summary: Update a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+    delete:
+      operationId: deleteTask
+      summary: Delete a task
+      responses:
+        '204':
+          description: Deleted
+components:
+  schemas:
+    Task:
+      type: object
+      required: [id, title, done, priority, createdAt]
+      properties:
+        id:
+          type: string
+          pattern: '^tsk_[A-Za-z0-9]{6,12}$'
+        title:
+          type: string
+          minLength: 3
+          maxLength: 80
+        done:
+          type: boolean
+        priority:
+          type: string
+          enum: [low, medium, high]
+        assigneeEmail:
+          type: string
+          format: email
+        dueDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+    TaskCreate:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 80
+        done:
+          type: boolean
+        priority:
+          type: string
+          enum: [low, medium, high]
+        assigneeEmail:
+          type: string
+          format: email
+        dueDate:
+          type: string
+          format: date

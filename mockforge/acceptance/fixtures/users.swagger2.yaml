@@ -1,0 +1,189 @@
+swagger: '2.0'
+info:
+  title: Users API
+  version: 1.2.0
+  description: Swagger 2.0 twin of users.yaml - must behave identically.
+paths:
+  /users:
+    get:
+      operationId: listUsers
+      summary: List users
+      parameters:
+        - name: status
+          in: query
+          required: false
+          type: string
+          enum: [active, blocked]
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 100
+        - name: offset
+          in: query
+          required: false
+          type: integer
+          minimum: 0
+        - name: sort
+          in: query
+          required: false
+          type: string
+        - name: order
+          in: query
+          required: false
+          type: string
+          enum: [asc, desc]
+      responses:
+        '200':
+          description: A page of users
+          headers:
+            X-Total-Count:
+              description: Total number of records in the session
+              type: integer
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    post:
+      operationId: createUser
+      summary: Create a user
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserCreate'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/User'
+  /users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        type: string
+        pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getUser
+      responses:
+        '200':
+          description: A user
+          schema:
+            $ref: '#/definitions/User'
+        '404':
+          description: Unknown id
+    put:
+      operationId: replaceUser
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserCreate'
+      responses:
+        '200':
+          description: Replaced
+          schema:
+            $ref: '#/definitions/User'
+    patch:
+      operationId: updateUser
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                minLength: 2
+                maxLength: 60
+              status:
+                type: string
+                enum: [active, blocked]
+              balance:
+                type: number
+                minimum: 0
+              age:
+                type: integer
+                minimum: 18
+                maximum: 65
+      responses:
+        '200':
+          description: Updated
+          schema:
+            $ref: '#/definitions/User'
+    delete:
+      operationId: deleteUser
+      responses:
+        '204':
+          description: Deleted
+definitions:
+  User:
+    type: object
+    required: [id, name, email, phone, status, balance, createdAt]
+    properties:
+      id:
+        type: string
+        pattern: '^usr_[A-Za-z0-9]{6,12}$'
+      name:
+        type: string
+        minLength: 2
+        maxLength: 60
+      email:
+        type: string
+        format: email
+      phone:
+        type: string
+        pattern: '^(\+91)?[6-9]\d{9}$'
+        description: Indian mobile number
+      status:
+        type: string
+        enum: [active, blocked]
+      balance:
+        type: number
+        minimum: 0
+        description: INR amount with 2 decimals
+      age:
+        type: integer
+        minimum: 18
+        maximum: 65
+      postalCode:
+        type: string
+        pattern: '^[1-9][0-9]{5}$'
+      createdAt:
+        type: string
+        format: date-time
+  UserCreate:
+    type: object
+    required: [name, email]
+    properties:
+      id:
+        type: string
+        pattern: '^[A-Za-z0-9_-]{1,64}$'
+      name:
+        type: string
+        minLength: 2
+        maxLength: 60
+      email:
+        type: string
+        format: email
+      phone:
+        type: string
+        pattern: '^(\+91)?[6-9]\d{9}$'
+      status:
+        type: string
+        enum: [active, blocked]
+      balance:
+        type: number
+        minimum: 0
+      age:
+        type: integer
+        minimum: 18
+        maximum: 65
+      postalCode:
+        type: string
+        pattern: '^[1-9][0-9]{5}$'

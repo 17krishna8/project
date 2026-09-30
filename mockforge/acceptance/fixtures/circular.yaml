@@ -1,0 +1,85 @@
+openapi: 3.0.3
+info:
+  title: Circular API
+  version: 1.0.0
+  description: Node references itself through children. Boot must not hang.
+paths:
+  /nodes:
+    get:
+      operationId: listNodes
+      responses:
+        '200':
+          description: Nodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Node'
+    post:
+      operationId: createNode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+  /nodes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getNode
+      responses:
+        '200':
+          description: A node
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+        '404':
+          description: Unknown id
+components:
+  schemas:
+    Node:
+      type: object
+      required: [id, label, children]
+      properties:
+        id:
+          type: string
+          pattern: '^node_[A-Za-z0-9]{6,10}$'
+        label:
+          type: string
+          minLength: 1
+          maxLength: 30
+        children:
+          type: array
+          description: Recursive reference back to Node
+          items:
+            $ref: '#/components/schemas/Node'
+    NodeCreate:
+      type: object
+      required: [label]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        label:
+          type: string
+          minLength: 1
+          maxLength: 30
+        children:
+          type: array
+          items:
+            type: object

@@ -1,0 +1,38 @@
+{
+  "name": "mockforge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MockForge - a mock REST server generator: OpenAPI 3.0 / Swagger 2.0 spec in, a behaving mock backend out in under 5 seconds",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build --workspace @mockforge/core && npm run build --workspaces --if-present",
+    "setup": "npm install && npm run build",
+    "start": "node packages/cli/dist/index.js samples/tasks.yaml --host 0.0.0.0 --port ${PORT:-3000}",
+    "lint": "eslint .",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p acceptance/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:coverage": "npm run test:coverage --workspace @mockforge/core",
+    "acceptance": "node scripts/run-acceptance.mjs",
+    "lock:acceptance": "bash scripts/update-acceptance-lock.sh",
+    "integrity": "node scripts/integrity/check-integrity.mjs",
+    "typecheck:acceptance": "tsc -p acceptance/tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.7.5",
+    "@vitest/coverage-v8": "^2.1.8",
+    "ajv": "^8.20.0",
+    "eslint": "^9.13.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.11.0",
+    "vitest": "^2.1.8"
+  }
+}

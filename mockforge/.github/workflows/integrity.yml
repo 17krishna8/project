@@ -1,0 +1,21 @@
+name: integrity
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Acceptance lock, protected paths, forbidden patterns
+        run: |
+          BASE="${{ github.event.pull_request.base.ref || github.event.repository.default_branch }}"
+          node scripts/integrity/check-integrity.mjs --base "origin/$BASE"

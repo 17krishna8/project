@@ -1,0 +1,25 @@
+name: review-gate
+
+# A PR may only merge with an independent reviewer's approval comment for the
+# current head commit, and with real receipts in the PR body.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require RECEIPTS and REVIEW-APPROVED for head sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          BODY="$(gh pr view "$PR_NUMBER" --json body --jq .body)"
+          echo "$BODY" | grep -q "RECEIPTS" || { echo "::error::PR body has no RECEIPTS section"; exit 1; }
+          gh pr view "$PR_NUMBER" --json comments --jq '.comments[].body' \
+            | grep -q "REVIEW-APPROVED sha=$HEAD_SHA" \
+            || { echo "::error::missing comment 'REVIEW-APPROVED sha=$HEAD_SHA' from an independent reviewer"; exit 1; }
+          echo "review-gate: OK"

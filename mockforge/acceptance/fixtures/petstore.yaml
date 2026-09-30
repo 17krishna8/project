@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: Petstore
+  version: 1.0.0
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      responses:
+        '200':
+          description: A page of pets
+          headers:
+            X-Total-Count:
+              description: Total number of records in the session
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+    post:
+      operationId: createPet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+  /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+    get:
+      operationId: getPet
+      responses:
+        '200':
+          description: A pet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Unknown id
+    put:
+      operationId: replacePet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetCreate'
+      responses:
+        '200':
+          description: Replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+    patch:
+      operationId: updatePet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                status:
+                  type: string
+                  enum: [available, pending, sold]
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+    delete:
+      operationId: deletePet
+      responses:
+        '204':
+          description: Deleted
+components:
+  schemas:
+    Pet:
+      type: object
+      required: [id, name, tag, status]
+      properties:
+        id:
+          type: string
+          pattern: '^pet_[A-Za-z0-9]{6,10}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 40
+        tag:
+          type: string
+          enum: [dog, cat, bird]
+        status:
+          type: string
+          enum: [available, pending, sold]
+        birthDate:
+          type: string
+          format: date
+        vaccinated:
+          type: boolean
+        weightKg:
+          type: number
+          minimum: 0.1
+          maximum: 60
+    PetCreate:
+      type: object
+      required: [name, tag]
+      properties:
+        id:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 40
+        tag:
+          type: string
+          enum: [dog, cat, bird]
+        status:
+          type: string
+          enum: [available, pending, sold]
+        birthDate:
+          type: string
+          format: date
+        vaccinated:
+          type: boolean
+        weightKg:
+          type: number
+          minimum: 0.1
+          maximum: 60
