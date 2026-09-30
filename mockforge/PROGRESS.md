@@ -475,3 +475,77 @@ $ npm run build       -> tsc (core, cli) + vite build (dashboard)  (ok)
 $ npm run integrity   -> INTEGRITY: OK (acceptance lock verified, no forbidden patterns)
 $ node packages/cli/dist/index.js --version -> mockforge 0.1.0
 ```
+
+## Phase 11 - Docker Multi-Container Architecture & Interactive Memory Transfer Studio
+
+Built and verified:
+- **Docker Multi-Container Orchestration (`docker-compose.yml`)**:
+  - `mockforge-dummy` (Container A, port 3000) running Fastify in-memory engine and UI.
+  - `real-production-backend` (Container B, port 8080) running production database service.
+  - Connected via isolated Docker bridge network `mockforge-net`.
+  - Automated container health checks configured on IPv4 (`127.0.0.1`) returning healthy status.
+- **Dedicated Memory Transfer Studio in Dashboard (`⚡ Memory Transfer`)**:
+  - Interactive Container Database Memory Transfer Studio.
+  - Controls: Target Backend URL selector with Docker (`:8080`) / Localhost presets, Developer Session scope picker, Conflict Strategy (`upsert`, `append`, `clean_sync`), and Auto-Cutover Gateway switch.
+  - Quick action: `🌱 Seed 3 Tasks in Mock RAM` generates test records directly into container memory.
+  - Live execution: `🚀 Transfer Memory to Real Backend` triggers the 4-stage pipeline and streams memory across Docker containers.
+  - Live 4-Stage visual execution feedback (TCP Ping `✓ PASS`, Schema Parity `✓ PASS`, Memory Stream `✓ PASS`, Gateway Cutover `✓ PASS`, mutual token).
+  - Side-by-Side Dual Store Inspector: Visual comparison of Container A RAM vs Container B Ingested DB with sync badge (`🟢 100% In Sync`).
+
+## Phase 12 - Bidirectional Memory Transfer (Reverse Pull) & ForgeBot AI Copilot
+
+Built and verified:
+- **Bidirectional Memory Transfer (`direction: "pull"` & `POST /__admin/pull-memory`)**:
+  - Identified and resolved the root cause of the previous "0 entities hydrated" notice: real backend default entities lacked strict OpenAPI schema conformance (`^tsk_` id pattern, `createdAt`, `priority`).
+  - Added schema-compliant defaults to `demos/real-backend.mjs` (`tsk_real0001`, `priority: "high"`, ISO timestamps) so ingested records satisfy core Fastify validation.
+  - Added `direction: "pull"` support to `POST /__admin/handshake` and created dedicated `POST /__admin/pull-memory` endpoint in `packages/core/src/server/app.ts`.
+  - Added `🗄️ Seed in Real DB` quick-action button in `DataStoreCard.tsx` for Container B test record generation.
+  - Added directional mode switcher `[ ➡️ Push (Mock ➔ Real DB) | ⬅️ Reverse Pull (Real DB ➔ Mock RAM) ]` and `📥 Pull Snapshot from Real DB` trigger.
+  - Full roundtrip verified in Docker: Seeded 3 tasks in Real DB, pulled into Mock RAM, hydrated 4 entities, and achieved `🟢 100% In Sync (Stores Match)`.
+- **ForgeBot AI Copilot (`apps/dashboard/src/components/ForgeBotCopilot.tsx`)**:
+  - Built an in-dashboard AI assistant accessible via a floating bottom-right pill (`✨ ForgeBot AI Copilot`).
+  - Slide-over glassmorphic drawer with full prompt chat, tool telemetry badges, and quick-prompt chips.
+  - Local PC Model Connector: Supports Ollama (`http://localhost:11434/v1`), LM Studio (`http://localhost:1234/v1`), and custom OpenAI-compatible endpoints with live connection ping and model selector (`llama3.1:latest`, `qwen2.5-coder`).
+  - Dual-mode execution engine: invokes LLM tool-calling when local model is active, with deterministic fallback rule engine for instant offline control.
+  - Controllable platform tools:
+    - `set_chaos`: Configures latency (ms) and error injection rates.
+    - `switch_gateway`: Switches between `mock`, `hybrid`, and `live` proxy modes.
+    - `reverse_pull_memory`: Pulls records from Real DB (:8080) into Mock RAM (:3000).
+    - `forward_push_memory`: Pushes Mock RAM to Real DB.
+    - `seed_mock_tasks`: Seeds fresh mock tasks into memory.
+    - `navigate_tab`: Programmatically navigates dashboard tabs (`transfer`, `visualizations`, `console`, `playground`).
+    - `test_gateway`: Fires live verification requests through the Gateway Bridge.
+- **Verification Receipts**:
+  - 224/224 unit tests pass (`vitest run`).
+  - 0 TypeScript errors across all workspaces (`npm run typecheck`).
+  - Docker containers `mockforge-dummy` (:3000) and `real-production-backend` (:8080) running healthy.
+  - Browser testing verified with video recording and screenshot `forgebot_copilot_and_reverse_transfer_1790792740113.png`.
+
+## Phase 13 - Real Frontend Client Hosting, OpenAPI YAML Binding & End-to-End Memory Parity
+
+Built and verified:
+- **Hosted Real-World Frontend Application (`demos/real-frontend/`)**:
+  - Launched standalone client on `http://127.0.0.1:5173` via Node.js server (`demos/real-frontend/server.mjs`).
+  - Connected directly to MockForge (`http://127.0.0.1:3000`) and Real Backend Container (`http://127.0.0.1:8080`).
+  - Implemented 3-column Kanban interface (Backlog, In Flight / High Priority, Completed) styled in Obsidian & Deep Pine theme with Emerald glowing accents.
+  - Integrated live network latency meter, live HTTP response badges, and dual-container memory parity indicator.
+- **OpenAPI 3.0.3 YAML Contract Binding (`samples/tasks.yaml`)**:
+  - Bound client forms and validation rules strictly to `samples/tasks.yaml` (regex `^tsk_[A-Za-z0-9]{6,12}$`, enums, ISO timestamps).
+  - Built integrated YAML Contract Viewer modal (`#modal-spec-viewer`) with multi-spec switcher (`samples/tasks.yaml`, `samples/blog.yaml`, `acceptance/fixtures/users.yaml`).
+- **Complete End-to-End Real-World Memory Verification (`demos/real-frontend/test-e2e.mjs`)**:
+  - **Phase 1**: Frontend hosting & asset delivery (HTTP 200).
+  - **Phase 2**: Dynamic YAML contract API loading.
+  - **Phase 3**: Seeding real-world enterprise engineering tasks into Mock RAM.
+  - **Phase 4**: Full CRUD verification (GET collection, PATCH task to done, GET single entity).
+  - **Phase 5**: Forward Memory Stream: Container A (Mock RAM) ➔ Container B (Real DB) with dual-store parity (`🟢 100% In Sync`).
+  - **Phase 6**: Reverse Memory Pull: Direct ingestion on Container B ➔ pulled into Mock RAM.
+  - **Phase 7**: Chaos Latency Injection: +400ms latency configured and measured (411ms roundtrip) then restored to 0ms.
+  - **Phase 8**: Multi-spec contract swapping (`samples/blog.yaml`).
+- **Visual Receipts**:
+  - `real_frontend_enterprise_tasks.png`: Real frontend active with live task cards, telemetry pills, and dual store memory bar.
+  - `real_frontend_in_sync.png`: Dual store parity showing `🟢 100% In Sync (15 Records)` across Container A & Container B.
+  - `real_frontend_yaml_modal.png`: Live OpenAPI 3.0.3 Specification Contract viewer rendering `samples/tasks.yaml`.
+
+
+
+

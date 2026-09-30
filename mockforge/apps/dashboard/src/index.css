@@ -1,3 +1,74 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f6f6f2;
+    color: #1e293b;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f2ec;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Figma v3 Card Styles */
+.card-figma {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 8px 16px -4px rgba(0, 0, 0, 0.02);
+}
+
+.card-hero {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.05);
+}
+
+/* Figma v3 Buttons */
+.btn-figma-primary {
+  background-color: #0f3d2e;
+  color: #ffffff;
+  border-radius: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 61, 46, 0.2);
+  transition: all 0.15s ease;
+}
+.btn-figma-primary:hover {
+  background-color: #15523e;
+  box-shadow: 0 2px 6px rgba(15, 61, 46, 0.3);
+  transform: translateY(-1px);
+}
+.btn-figma-primary:active {
+  transform: translateY(0);
+}
+
+.btn-figma-secondary {
+  background-color: #f1f2ec;
+  color: #334155;
+  border: 1px solid #e2e4dc;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+.btn-figma-secondary:hover {
+  background-color: #e5e7df;
+  color: #0f172a;
+}

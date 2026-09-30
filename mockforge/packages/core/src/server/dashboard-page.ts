@@ -72,16 +72,54 @@ export function renderDashboardPage(spec: { title: string; version: string; rout
   ul.sessions li:hover { background: rgba(30,41,59,.6); }
   pre { margin: 10px 0 0; padding: 10px; border-radius: 8px; background: #020617; border: 1px solid #1e293b;
         font-size: 11px; max-height: 200px; overflow: auto; color: #cbd5e1; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(2,6,23,.8); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal { background: #0f172a; border: 1px solid #334155; border-radius: 16px; width: 100%; max-width: 600px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,.7); }
+  .dropzone { border: 2px dashed #475569; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all .2s; }
+  .dropzone:hover { border-color: #6366f1; background: rgba(99,102,241,.06); }
+  .dropzone.dragover { border-color: #6366f1; background: rgba(99,102,241,.15); }
   footer { max-width: 1200px; margin: 0 auto; padding: 0 24px 32px; font-size: 12px; color: #475569; }
 </style>
 </head>
 <body>
+<div id="upload-modal" class="modal-bg">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="margin:0;font-size:16px;color:#f8fafc">Upload / Switch Spec</h2>
+      <button id="close-modal" style="padding:2px 8px;font-size:14px">✕</button>
+    </div>
+    <p class="note" style="margin:0 0 16px">Upload an OpenAPI (3.x) or Swagger (2.0) YAML/JSON file, or choose from sample specs.</p>
+    
+    <div class="dropzone" id="dropzone">
+      <p style="margin:0;font-weight:500;color:#cbd5e1">Drag & drop .yaml or .json file here</p>
+      <p class="note" style="margin:4px 0 12px">or click to browse files</p>
+      <input type="file" id="spec-file-input" accept=".yaml,.yml,.json" style="display:none" />
+      <button class="primary" id="btn-browse" type="button">Browse Files</button>
+    </div>
+    
+    <div style="margin-top:16px">
+      <label style="margin:0 0 8px 0;font-weight:600;font-size:12px;color:#94a3b8">Switch to a sample spec:</label>
+      <div id="sample-buttons" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"></div>
+    </div>
+
+    <div style="margin-top:16px">
+      <label style="margin:0 0 8px 0;font-weight:600;font-size:12px;color:#94a3b8">Or paste YAML / JSON:</label>
+      <textarea id="spec-paste" rows="4" style="width:100%;box-sizing:border-box;background:#020617;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-family:monospace;font-size:11px;padding:8px" placeholder="openapi: 3.0.3&#10;..."></textarea>
+      <div style="margin-top:6px">
+        <button class="primary" id="btn-load-pasted" type="button">Load Pasted Spec</button>
+      </div>
+    </div>
+
+    <div id="upload-status" style="margin-top:12px;font-size:12px;display:none;padding:8px 12px;border-radius:8px"></div>
+  </div>
+</div>
+
 <header>
   <div>
     <h1>MockForge Dashboard</h1>
     <p class="sub" id="spec"></p>
   </div>
-  <div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="primary" id="btn-upload" style="background:#4f46e5;font-weight:600">📤 Upload / Switch Spec</button>
     <span class="badge bad" id="health">checking</span>
     <span class="badge dim" id="mode"></span>
   </div>
@@ -274,6 +312,111 @@ source.onmessage = (message) => {
   body.prepend(row);
   while (body.children.length > 200) body.lastChild.remove();
 };
+
+// --- upload & spec switcher ----------------------------------------------
+function setUploadStatus(msg, isError) {
+  const el = $("upload-status");
+  el.style.display = "block";
+  el.textContent = msg;
+  el.style.background = isError ? "rgba(244,63,94,.15)" : "rgba(16,185,129,.15)";
+  el.style.color = isError ? "#fda4af" : "#6ee7b7";
+  el.style.border = "1px solid " + (isError ? "rgba(244,63,94,.3)" : "rgba(16,185,129,.3)");
+}
+
+async function uploadSpecContent(specContent, filename) {
+  setUploadStatus("Validating and generating routes...", false);
+  try {
+    const res = await fetch("/__admin/spec", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ spec: specContent, filename })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || "Upload failed: " + res.status);
+    setUploadStatus("Loaded " + data.title + " v" + data.version + " (" + data.routes + " routes)", false);
+    $("spec").textContent = data.title + " v" + data.version;
+    refreshHealth();
+    refreshRoutes();
+    refreshSessions();
+    setTimeout(() => { $("upload-modal").style.display = "none"; }, 1500);
+  } catch (err) {
+    setUploadStatus(err.message || String(err), true);
+  }
+}
+
+async function loadSample(sampleName) {
+  setUploadStatus("Loading sample " + sampleName + "...", false);
+  try {
+    const res = await fetch("/__admin/spec", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sample: sampleName })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || "Sample load failed: " + res.status);
+    setUploadStatus("Loaded " + data.title + " (" + data.routes + " routes)", false);
+    $("spec").textContent = data.title + " v" + data.version;
+    refreshHealth();
+    refreshRoutes();
+    refreshSessions();
+    setTimeout(() => { $("upload-modal").style.display = "none"; }, 1200);
+  } catch (err) {
+    setUploadStatus(err.message || String(err), true);
+  }
+}
+
+async function loadSamples() {
+  try {
+    const list = await get("/__admin/samples");
+    const container = $("sample-buttons");
+    container.innerHTML = "";
+    list.forEach((s) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "dim";
+      btn.textContent = s.title + " (" + s.routesCount + " routes)";
+      btn.addEventListener("click", () => loadSample(s.filename));
+      container.appendChild(btn);
+    });
+  } catch { /* ignore */ }
+}
+
+$("btn-upload").addEventListener("click", () => {
+  $("upload-modal").style.display = "flex";
+  loadSamples();
+});
+$("close-modal").addEventListener("click", () => { $("upload-modal").style.display = "none"; });
+$("upload-modal").addEventListener("click", (e) => {
+  if (e.target === $("upload-modal")) $("upload-modal").style.display = "none";
+});
+
+$("btn-browse").addEventListener("click", () => $("spec-file-input").click());
+$("spec-file-input").addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => uploadSpecContent(reader.result, file.name);
+  reader.readAsText(file);
+});
+
+const dz = $("dropzone");
+dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("dragover"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+dz.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dz.classList.remove("dragover");
+  const file = e.dataTransfer?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => uploadSpecContent(reader.result, file.name);
+  reader.readAsText(file);
+});
+
+$("btn-load-pasted").addEventListener("click", () => {
+  const text = $("spec-paste").value.trim();
+  if (!text) { setUploadStatus("Please paste a YAML or JSON spec first.", true); return; }
+  uploadSpecContent(text, "pasted-spec.yaml");
+});
 
 refreshHealth(); refreshRoutes(); refreshSessions();
 setInterval(refreshHealth, 2000);

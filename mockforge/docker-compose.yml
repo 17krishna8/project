@@ -1,0 +1,33 @@
+networks:
+  mockforge-net:
+    driver: bridge
+
+services:
+  real-production-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: real-production-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+    networks:
+      - mockforge-net
+
+  mockforge-dummy:
+    build:
+      context: .
+      dockerfile: Dockerfile.mockforge
+    container_name: mockforge-dummy
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - TARGET_BACKEND_URL=http://real-production-backend:8080
+    networks:
+      - mockforge-net
+    depends_on:
+      - real-production-backend

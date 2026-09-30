@@ -63,15 +63,10 @@ function dropEmptyPathItems(document: Record<string, unknown>): void {
 }
 
 export function parseSpecFile(specPath: string): LoadedDocument {
-  let size: number;
-  try {
-    size = statSync(specPath).size;
-  } catch (err) {
-    throw new SpecError(`Cannot read spec file: ${(err as Error).message}`, "$.file");
-  }
-  if (size > MAX_SPEC_BYTES) {
+  const stat = statSync(specPath);
+  if (stat.size > MAX_SPEC_BYTES) {
     throw new SpecError(
-      `Spec file is ${(size / 1024 / 1024).toFixed(1)} MB, over the 5 MB limit`,
+      `${specPath} is ${(stat.size / 1024 / 1024).toFixed(1)} MB, over the 5 MB limit`,
       "$.file"
     );
   }
@@ -90,7 +85,6 @@ export function parseSpecText(text: string, sourceLabel = "uploaded spec"): Load
       "$.file"
     );
   }
-
   let document: Record<string, unknown>;
   try {
     // `json: true` makes js-yaml tolerate duplicate mapping keys with last-wins,
@@ -115,6 +109,24 @@ export function parseSpecText(text: string, sourceLabel = "uploaded spec"): Load
   const specVersion = detectSpecVersion(document);
   rejectNonLocalRefs(document, "$");
   return { document, specVersion };
+}
+
+export function parseSpecFile(specPath: string): LoadedDocument {
+  let size: number;
+  try {
+    size = statSync(specPath).size;
+  } catch (err) {
+    throw new SpecError(`Cannot read spec file: ${(err as Error).message}`, "$.file");
+  }
+  if (size > MAX_SPEC_BYTES) {
+    throw new SpecError(
+      `Spec file is ${(size / 1024 / 1024).toFixed(1)} MB, over the 5 MB limit`,
+      "$.file"
+    );
+  }
+
+  const text = readFileSync(specPath, "utf8");
+  return parseSpecText(text);
 }
 
 /** Full OpenAPI/Swagger validation (structure, required fields, types). */

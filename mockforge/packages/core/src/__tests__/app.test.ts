@@ -691,6 +691,74 @@ describe("admin reload and logs", () => {
     expect(event.status).toBe(200);
     expect(event.session).toBe("sse");
   }, 15_000);
+
+  it("uploads and hot-swaps a spec from uploaded YAML text", async () => {
+    const forge = await boot();
+    open.push(forge);
+
+    const uploadedYaml = [
+      "openapi: 3.0.3",
+      "info:",
+      "  title: Uploaded Products API",
+      "  version: 2.5.0",
+      "paths:",
+      "  /products:",
+      "    get:",
+      "      operationId: listProducts",
+      "      responses:",
+      "        '200':",
+      "          description: products list",
+      "          content:",
+      "            application/json:",
+      "              schema:",
+      "                type: array",
+      "                items:",
+      "                  type: object"
+    ].join("\n");
+
+    const res = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      payload: { spec: uploadedYaml, filename: "products.yaml" }
+    });
+    expect(res.statusCode).toBe(200);
+    const data = res.json();
+    expect(data.title).toBe("Uploaded Products API");
+    expect(data.version).toBe("2.5.0");
+    expect(data.routes).toBe(1);
+    expect(data.reloaded).toBe(true);
+
+    const pingOld = await forge.app.inject({ method: "GET", url: "/users" });
+    expect(pingOld.statusCode).toBe(404);
+
+    const productsRes = await forge.app.inject({ method: "GET", url: "/products" });
+    expect(productsRes.statusCode).toBe(200);
+
+    const specInfo = await forge.app.inject({ method: "GET", url: "/__admin/spec" });
+    expect(specInfo.json().title).toBe("Uploaded Products API");
+  });
+
+  it("lists available samples and switches to a sample spec", async () => {
+    const forge = await boot();
+    open.push(forge);
+
+    const samplesRes = await forge.app.inject({ method: "GET", url: "/__admin/samples" });
+    expect(samplesRes.statusCode).toBe(200);
+    const samples = samplesRes.json();
+    expect(Array.isArray(samples)).toBe(true);
+    expect(samples.some((s: { filename: string }) => s.filename.includes("tasks.yaml"))).toBe(true);
+
+    const switchRes = await forge.app.inject({
+      method: "POST",
+      url: "/__admin/spec",
+      payload: { sample: "tasks.yaml" }
+    });
+    expect(switchRes.statusCode).toBe(200);
+    expect(switchRes.json().title).toBe("Tasks API");
+
+    const tasksRes = await forge.app.inject({ method: "GET", url: "/tasks" });
+    expect(tasksRes.statusCode).toBe(200);
+  });
 });
 
 describe("spec upload", () => {

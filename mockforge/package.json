@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test:coverage": "npm run test:coverage --workspace @mockforge/core",
     "acceptance": "node scripts/run-acceptance.mjs",
+    "demo:frontend": "node demos/real-frontend/server.mjs",
     "lock:acceptance": "bash scripts/update-acceptance-lock.sh",
     "integrity": "node scripts/integrity/check-integrity.mjs",
     "typecheck:acceptance": "tsc -p acceptance/tsconfig.json --noEmit"

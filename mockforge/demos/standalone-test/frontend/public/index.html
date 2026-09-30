@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForgeCommerce | Standalone OpenAPI Test Suite</title>
+  <meta name="description" content="Dedicated standalone demo frontend for testing OpenAPI 3.0 YAML specifications, dynamic endpoints hot-reloading, and real-time data visualizations against MockForge and Real Production Backend.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="app-layout">
+    <!-- Top Navigation Header -->
+    <header class="navbar">
+      <div class="nav-brand">
+        <div class="logo-box">
+          <span>🛍️</span>
+        </div>
+        <div>
+          <div class="brand-row">
+            <h1 class="brand-name" id="val-spec-title">E-Commerce Store & Inventory API</h1>
+            <span class="badge-ver" id="val-spec-version">v1.5.0</span>
+          </div>
+          <span class="brand-desc" id="val-spec-desc">OpenAPI 3.0.3 Contract &bull; Real-Time Dynamic Endpoints & Data Visualizations</span>
+        </div>
+      </div>
+
+      <!-- Live Telemetry & Gateway Controls -->
+      <div class="nav-controls">
+        <!-- Target Server Switcher -->
+        <div class="gateway-switch-group">
+          <span class="switch-label">Target:</span>
+          <button type="button" class="btn-target active" id="btn-target-mock" title="Send requests to MockForge Dummy Server (:3000)">
+            <span class="dot yellow"></span>
+            <span>MockForge (:3000)</span>
+          </button>
+          <button type="button" class="btn-target" id="btn-target-real" title="Send requests to Standalone Real Backend (:8085)">
+            <span class="dot green"></span>
+            <span>Real Backend (:8085)</span>
+          </button>
+        </div>
+
+        <!-- Latency Meter -->
+        <div class="telemetry-chip" title="Live Roundtrip Fastify Latency">
+          <span class="chip-icon">⏱️</span>
+          <span class="chip-label">Latency:</span>
+          <strong class="chip-val font-mono" id="val-latency">11ms</strong>
+        </div>
+
+        <!-- Parity Badge -->
+        <div class="telemetry-chip" title="Dual-Store Container Parity">
+          <span class="status-dot green" id="dot-sync"></span>
+          <strong class="chip-val" id="val-sync-state">100% In Sync</strong>
+        </div>
+
+        <!-- View / Edit Spec Button -->
+        <button type="button" class="btn-action-primary" id="btn-open-spec-modal">
+          <span>📜</span>
+          <span>View / Edit YAML</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-body">
+      <!-- Section 1: Dynamic Endpoints Banner (Updates according to active YAML spec) -->
+      <section class="banner-endpoints" id="section-endpoints">
+        <div class="endpoints-top">
+          <div class="endpoints-heading">
+            <span class="flash-icon">⚡</span>
+            <div>
+              <h3>Active OpenAPI Endpoints</h3>
+              <p id="endpoints-subtitle">Loading dynamic endpoints from ecommerce.yaml...</p>
+            </div>
+          </div>
+          <div class="filter-pills" id="endpoints-filter-group">
+            <button class="pill active" data-method="ALL">ALL (<span id="count-all-routes">0</span>)</button>
+            <button class="pill" data-method="GET">GET</button>
+            <button class="pill" data-method="POST">POST</button>
+            <button class="pill" data-method="PUT">PUT</button>
+            <button class="pill" data-method="PATCH">PATCH</button>
+            <button class="pill" data-method="DELETE">DELETE</button>
+          </div>
+        </div>
+
+        <div class="endpoints-grid" id="endpoints-container">
+          <!-- Dynamically populated from active YAML spec -->
+        </div>
+      </section>
+
+      <!-- Section 2: Dual-Store Container Parity Dashboard -->
+      <section class="parity-section">
+        <div class="parity-card mock-card">
+          <div class="parity-card-header">
+            <span class="node-tag mock">Container A &bull; MockForge RAM</span>
+            <span class="port-tag">:3000</span>
+          </div>
+          <div class="parity-metric">
+            <span class="metric-num" id="val-mock-count">0</span>
+            <span class="metric-lbl">Active Entities in Mock RAM</span>
+          </div>
+          <div class="parity-card-footer">
+            <span>Fastify In-Memory Engine</span>
+            <span class="session-badge">session-standalone</span>
+          </div>
+        </div>
+
+        <!-- Sync Bridge -->
+        <div class="parity-bridge">
+          <button type="button" class="btn-sync-action" id="btn-push-to-real" title="Push in-memory Mock data to Real DB (:8085)">
+            <span>➡️ Push Memory</span>
+          </button>
+          <div class="sync-diff-badge" id="val-sync-diff">100% Match</div>
+          <button type="button" class="btn-sync-action" id="btn-pull-from-real" title="Reverse pull Real DB (:8085) data into Mock RAM">
+            <span>⬅️ Pull Memory</span>
+          </button>
+        </div>
+
+        <div class="parity-card real-card">
+          <div class="parity-card-header">
+            <span class="node-tag real">Container B &bull; Real Backend DB</span>
+            <span class="port-tag">:8085</span>
+          </div>
+          <div class="parity-metric">
+            <span class="metric-num" id="val-real-count">0</span>
+            <span class="metric-lbl">Ingested Database Records</span>
+          </div>
+          <div class="parity-card-footer">
+            <span>Node.js Real Production Server</span>
+            <span class="live-indicator">🟢 Live & Ingesting</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Live Data Visualizations & Spec Analytics -->
+      <section class="viz-dashboard">
+        <div class="viz-top">
+          <div class="viz-heading">
+            <span class="viz-badge-icon">📊</span>
+            <div>
+              <h3>Live Data Visualizations & Contract Telemetry</h3>
+              <p>Real-time analytics dynamically reflecting the active YAML contract, in-memory entities, and HTTP performance</p>
+            </div>
+          </div>
+          <span class="live-pill-pulse">LIVE REACTIVE TELEMETRY</span>
+        </div>
+
+        <div class="viz-cards-row">
+          <!-- Chart 1: In-Memory Entities Distribution -->
+          <div class="viz-box">
+            <div class="viz-box-header">
+              <span class="viz-box-title">In-Memory Entities by Resource</span>
+              <span class="viz-box-sub font-mono" id="viz-entities-total">0 items in RAM</span>
+            </div>
+            <div class="bars-wrapper" id="chart-entities-bars">
+              <!-- Dynamically populated from active spec resources -->
+            </div>
+            <div class="viz-box-footer">
+              <span class="legend-item"><span class="dot-sm emerald"></span> Live RAM Store</span>
+              <span class="legend-item"><span class="dot-sm indigo"></span> Schema Validated</span>
+            </div>
+          </div>
+
+          <!-- Chart 2: Active Contract Operation Types (Donut Radar) -->
+          <div class="viz-box">
+            <div class="viz-box-header">
+              <span class="viz-box-title">Active Contract Operation Types</span>
+              <span class="viz-box-sub font-mono" id="viz-routes-count">0 Routes</span>
+            </div>
+            <div class="donut-content">
+              <div class="donut-chart-box">
+                <svg class="donut-svg" viewBox="0 0 100 100" id="svg-donut-radar">
+                  <circle cx="50" cy="50" r="38" class="donut-track" />
+                  <!-- Segments inserted dynamically -->
+                </svg>
+                <div class="donut-core">
+                  <strong id="donut-ops-val">0</strong>
+                  <span>OPS</span>
+                </div>
+              </div>
+              <div class="donut-legend-box" id="donut-legend-list">
+                <!-- Legend items inserted dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart 3: Real-Time Latency Waveform Sparkline -->
+          <div class="viz-box">
+            <div class="viz-box-header">
+              <span class="viz-box-title">Roundtrip Latency Timeline</span>
+              <span class="viz-box-sub font-mono" id="viz-latency-avg">Avg: 12ms</span>
+            </div>
+            <div class="sparkline-wrapper">
+              <svg class="sparkline-svg" viewBox="0 0 360 80" preserveAspectRatio="none" id="svg-sparkline">
+                <path d="M 0,80 L 360,80 Z" class="sparkline-fill" id="sparkline-fill-path" />
+                <path d="M 0,40 L 360,40" class="sparkline-stroke" id="sparkline-stroke-path" />
+              </svg>
+            </div>
+            <div class="sparkline-foot font-mono">
+              <span>0ms</span>
+              <span id="sparkline-peak">Peak: 20ms</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Interactive Operations Toolbar -->
+      <section class="toolbar-section">
+        <div class="toolbar-actions-left">
+          <button type="button" class="btn-cta emerald" id="btn-seed-data">
+            <span>🌱</span> <span>Seed E-Commerce Catalog</span>
+          </button>
+          <button type="button" class="btn-cta indigo" id="btn-create-product">
+            <span>➕</span> <span>New Product</span>
+          </button>
+          <button type="button" class="btn-cta amber" id="btn-create-order">
+            <span>🛒</span> <span>Place Order</span>
+          </button>
+          <button type="button" class="btn-cta ghost" id="btn-refresh-all">
+            <span>🔄</span> <span>Refresh Data</span>
+          </button>
+        </div>
+        <div class="toolbar-actions-right">
+          <div class="chaos-pill" id="chaos-toggle-btn" title="Toggle simulated latency on MockForge">
+            <span>⚡ Simulated Latency:</span>
+            <strong id="val-chaos-status">Off (0ms)</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Data Management Tabs & Tables -->
+      <section class="data-section">
+        <div class="data-tabs-header">
+          <div class="tab-buttons-group" id="resource-tabs-container">
+            <button class="resource-tab active" data-res="products">Products (<span id="count-tab-products">0</span>)</button>
+            <button class="resource-tab" data-res="orders">Orders (<span id="count-tab-orders">0</span>)</button>
+          </div>
+          <span class="data-summary-label" id="label-active-res-count">0 items loaded</span>
+        </div>
+
+        <!-- Tab Content 1: Products Grid -->
+        <div id="view-products" class="tab-view active">
+          <div class="products-grid" id="products-catalog-container">
+            <!-- Rendered product cards -->
+          </div>
+        </div>
+
+        <!-- Tab Content 2: Orders Table -->
+        <div id="view-orders" class="tab-view" style="display: none;">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Email</th>
+                  <th>Items</th>
+                  <th>City</th>
+                  <th>Total Amount</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="orders-table-body">
+                <!-- Rendered orders rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal 1: OpenAPI Specification Studio (YAML Viewer & Live Editor) -->
+    <div class="modal-overlay" id="modal-spec-studio" style="display: none;">
+      <div class="modal-window modal-wide">
+        <div class="modal-top">
+          <div class="modal-title-group">
+            <h3>OpenAPI Specification Studio</h3>
+            <span class="badge-spec-path" id="modal-spec-filename">ecommerce.yaml</span>
+          </div>
+          <button class="btn-modal-close" id="btn-close-spec-modal">&times;</button>
+        </div>
+
+        <div class="modal-studio-tabs">
+          <button type="button" class="studio-tab-btn active" id="tab-studio-view">📜 View Spec AST</button>
+          <button type="button" class="studio-tab-btn" id="tab-studio-edit">✍️ Edit & Hot-Reload Spec</button>
+        </div>
+
+        <div class="modal-inner-body">
+          <div id="pane-studio-view">
+            <pre class="code-view-block"><code id="code-spec-viewer">Loading specification...</code></pre>
+          </div>
+          <div id="pane-studio-edit" style="display: none;">
+            <div class="editor-subbar">
+              <span style="font-size: 0.76rem; color: var(--text-dim);">Edit or paste OpenAPI 3.0 YAML specification:</span>
+              <span class="font-mono text-dim" id="label-yaml-stats">0 lines</span>
+            </div>
+            <textarea id="textarea-yaml-editor" class="yaml-editor-textarea" rows="14" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-bottom-actions">
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button type="button" class="btn-cta emerald" id="btn-apply-spec-changes">
+              ⚡ Apply & Hot-Reload on MockForge
+            </button>
+            <span id="label-apply-status" style="font-size: 0.76rem; color: var(--emerald-400); display: none;"></span>
+          </div>
+          <button type="button" class="btn-cta ghost" id="btn-dismiss-spec-modal">Close Studio</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Create Product Modal -->
+    <div class="modal-overlay" id="modal-add-product" style="display: none;">
+      <div class="modal-window">
+        <div class="modal-top">
+          <h3>Add New Product to Catalog</h3>
+          <button class="btn-modal-close" id="btn-close-product-modal">&times;</button>
+        </div>
+        <form id="form-add-product" class="modal-form-content">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="input-product-name">Product Name *</label>
+              <input type="text" id="input-product-name" required placeholder="e.g. Wireless Ergonomic Mouse" class="input-ctrl">
+            </div>
+          </div>
+          <div class="form-row two-cols">
+            <div class="form-field">
+              <label for="select-product-cat">Category *</label>
+              <select id="select-product-cat" class="select-ctrl">
+                <option value="computing">Computing</option>
+                <option value="audio">Audio</option>
+                <option value="electronics">Electronics</option>
+                <option value="apparel">Apparel</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="input-product-price">Price (USD) *</label>
+              <input type="number" step="0.01" min="1" id="input-product-price" required placeholder="89.99" class="input-ctrl">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="input-product-stock">Initial Stock Quantity</label>
+              <input type="number" min="0" id="input-product-stock" value="25" class="input-ctrl">
+            </div>
+          </div>
+          <div class="modal-bottom-actions">
+            <button type="button" class="btn-cta ghost" id="btn-cancel-product">Cancel</button>
+            <button type="submit" class="btn-cta emerald">Create Product</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 3: Place Order Modal -->
+    <div class="modal-overlay" id="modal-add-order" style="display: none;">
+      <div class="modal-window">
+        <div class="modal-top">
+          <h3>Place Customer Order</h3>
+          <button class="btn-modal-close" id="btn-close-order-modal">&times;</button>
+        </div>
+        <form id="form-add-order" class="modal-form-content">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="input-order-customer">Customer Full Name *</label>
+              <input type="text" id="input-order-customer" required placeholder="e.g. Devika Menon" class="input-ctrl">
+            </div>
+          </div>
+          <div class="form-row two-cols">
+            <div class="form-field">
+              <label for="input-order-email">Email Address *</label>
+              <input type="email" id="input-order-email" required placeholder="devika@enterprise.in" class="input-ctrl">
+            </div>
+            <div class="form-field">
+              <label for="input-order-city">Shipping City</label>
+              <input type="text" id="input-order-city" value="Hyderabad" class="input-ctrl">
+            </div>
+          </div>
+          <div class="form-row two-cols">
+            <div class="form-field">
+              <label for="input-order-amount">Total Amount (USD) *</label>
+              <input type="number" step="0.01" min="1" id="input-order-amount" required placeholder="249.50" class="input-ctrl">
+            </div>
+            <div class="form-field">
+              <label for="input-order-items">Number of Items</label>
+              <input type="number" min="1" id="input-order-items" value="1" class="input-ctrl">
+            </div>
+          </div>
+          <div class="modal-bottom-actions">
+            <button type="button" class="btn-cta ghost" id="btn-cancel-order">Cancel</button>
+            <button type="submit" class="btn-cta amber">Submit Order</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-hub" id="toast-hub"></div>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

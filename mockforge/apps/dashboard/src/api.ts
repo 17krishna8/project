@@ -53,6 +53,137 @@ export interface LogEvent {
   latencyMs: number;
   fault: string | null;
   validation: string | null;
+  source?: string;
+  fallback?: boolean;
+}
+
+export interface SampleInfo {
+  id: string;
+  filename: string;
+  title: string;
+  version: string;
+  description: string;
+  routesCount: number;
+  resourcesCount: number;
+}
+
+export interface SpecDetails {
+  title: string;
+  version: string;
+  routes: number;
+  resources: number;
+  sourcePath: string | null;
+}
+
+export interface ReloadResult {
+  title: string;
+  version: string;
+  routes: number;
+  reloaded: boolean;
+  source?: string;
+}
+
+export interface DockerInfo {
+  serviceName: string;
+  targetPort: number;
+  targetUrl: string;
+  dockerCompose: string;
+}
+
+export interface FrontendLinkInfo {
+  linkedFrontendUrl: string;
+  dummyServerUrl: string;
+  corsActive: boolean;
+  envSnippet: string;
+  clientSnippet: string;
+}
+
+export interface HandshakeResult {
+  success: boolean;
+  handshakeToken: string;
+  targetUrl: string;
+  linkedFrontendUrl: string;
+  sessionId: string;
+  direction?: "push" | "pull";
+  stages: {
+    connectivity: {
+      passed: boolean;
+      latencyMs: number;
+      status: number;
+      url: string;
+    };
+    schema: {
+      passed: boolean;
+      totalRoutes: number;
+      matchedRoutes: number;
+      parityPercent: number;
+      specTitle: string;
+    };
+    memory: {
+      passed: boolean;
+      sessionId: string;
+      entitiesCount: number;
+      strategy: string;
+      transferStatus: string;
+      resourcesSummary: Record<string, number>;
+      direction?: "push" | "pull";
+    };
+    handoff: {
+      passed: boolean;
+      mode: "proxy_bridge" | "direct_cutover";
+      proxyActive: boolean;
+      dummyStopping: boolean;
+      handshakeToken: string;
+    };
+  };
+  proxyBridge: {
+    enabled: boolean;
+    targetUrl: string;
+    authHeader?: string;
+    circuitBreaker?: boolean;
+  };
+  message: string;
+}
+
+export interface ProxyConfig {
+  enabled: boolean;
+  targetUrl: string;
+  authHeader: string;
+  circuitBreaker: boolean;
+}
+
+export interface AuthConfig {
+  enabled: boolean;
+  type: "bearer" | "apikey";
+  token: string;
+  requiredRole: "viewer" | "editor" | "admin";
+}
+
+export interface DualMemoryState {
+  sessionId: string;
+  targetUrl: string;
+  syncStatus: "in_sync" | "partial_sync" | "staged" | "empty";
+  dummy: {
+    sessionId: string;
+    entitiesCount: number;
+    resources: Record<string, unknown[]>;
+  };
+  backend: {
+    reachable: boolean;
+    entitiesCount: number;
+    resources: Record<string, unknown[]>;
+  };
+  matchCount: number;
+}
+
+export interface CutoverResult {
+  success: boolean;
+  targetUrl: string;
+  backendReady: boolean;
+  backendLatencyMs: number;
+  sessionsCount: number;
+  sessionsData: Record<string, Record<string, unknown[]>>;
+  dummyStopping: boolean;
 }
 
 async function getJson<T>(path: string): Promise<T> {
@@ -66,6 +197,9 @@ export const api = {
   sessions: () => getJson<SessionInfo[]>("/__admin/sessions"),
   chaos: () => getJson<ChaosConfig>("/__admin/chaos"),
   health: () => getJson<HealthInfo>("/__health"),
+  spec: () => getJson<SpecDetails>("/__admin/spec"),
+  samples: () => getJson<SampleInfo[]>("/__admin/samples"),
+  dockerInfo: () => getJson<DockerInfo>("/__admin/docker"),
   sessionData: (id: string) => getJson<Record<string, Array<Record<string, unknown>>>>(`/__admin/sessions/${encodeURIComponent(id)}/data`),
   deleteSession: async (id: string) => {
     await fetch(`/__admin/sessions/${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -90,9 +224,7 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ spec, ...(filename ? { filename } : {}) })
     });
-    const payload = (await res.json().catch(() => null)) as
-      | (SpecUploadResult & { error?: { code: string; message: string; details: Array<{ path: string; reason: string }> } })
-      | null;
+    const payload = (await res.json().catch(() => null)) as any;
     if (!res.ok) {
       const message = payload?.error?.message ?? `upload -> ${res.status}`;
       const error = new Error(message) as Error & {
@@ -103,13 +235,101 @@ export const api = {
       error.details = payload?.error?.details;
       throw error;
     }
-    return payload as SpecUploadResult;
+    return payload;
   },
   /** Asks the server to re-read the file it was started with. */
   reloadFromDisk: async () => {
     const res = await fetch("/__admin/spec", { method: "POST" });
     if (!res.ok) throw new Error(`reload -> ${res.status}`);
-    return (await res.json()) as SpecUploadResult;
+    return await res.json();
+  },
+  loadSample: async (sampleFilename: string): Promise<ReloadResult> => {
+    const res = await fetch("/__admin/spec", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sample: sampleFilename })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error?.message || `Failed to load sample: ${res.status}`);
+    }
+    return data as ReloadResult;
+  },
+  cutoverToBackend: async (targetUrl: string, stopDummy = true): Promise<CutoverResult> => {
+    const res = await fetch("/__admin/cutover", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ targetUrl, stopDummy })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(`Cutover request failed: ${res.status}`);
+    }
+    return data as CutoverResult;
+  },
+  frontendLink: () => getJson<FrontendLinkInfo>("/__admin/frontend-link"),
+  linkFrontend: async (frontendUrl: string): Promise<FrontendLinkInfo> => {
+    const res = await fetch("/__admin/frontend-link", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ frontendUrl })
+    });
+    return (await res.json()) as FrontendLinkInfo;
+  },
+  proxyConfig: () => getJson<ProxyConfig>("/__admin/proxy"),
+  updateProxy: async (config: Partial<ProxyConfig>): Promise<ProxyConfig> => {
+    const res = await fetch("/__admin/proxy", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(config)
+    });
+    return (await res.json()) as ProxyConfig;
+  },
+  runHandshake: async (params: {
+    targetUrl: string;
+    frontendUrl?: string;
+    sessionId?: string;
+    strategy?: "upsert" | "append" | "clean_sync";
+    direction?: "push" | "pull";
+    authHeader?: string;
+    autoProxy?: boolean;
+    autoStop?: boolean;
+    transferMemory?: boolean;
+  }): Promise<HandshakeResult> => {
+    const res = await fetch("/__admin/handshake", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(params)
+    });
+    return (await res.json()) as HandshakeResult;
+  },
+  pullMemory: async (params: {
+    targetUrl: string;
+    sessionId?: string;
+    strategy?: "upsert" | "append" | "clean_sync";
+  }) => {
+    const res = await fetch("/__admin/pull-memory", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(params)
+    });
+    return await res.json();
+  },
+  dualMemory: (targetUrl?: string, sessionId?: string) => {
+    const params = new URLSearchParams();
+    if (targetUrl) params.set("targetUrl", targetUrl);
+    if (sessionId) params.set("sessionId", sessionId);
+    return getJson<DualMemoryState>(`/__admin/backend-memory?${params.toString()}`);
+  },
+  authConfig: () => getJson<AuthConfig>("/__admin/auth"),
+  updateAuth: async (config: Partial<AuthConfig>): Promise<AuthConfig> => {
+    const res = await fetch("/__admin/auth", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(config)
+    });
+    return (await res.json()) as AuthConfig;
+>>>>>>> e843bdf (feat: complete standalone test suite, dual-store memory sync, architecture docs, and setup manual)
   }
 };
 

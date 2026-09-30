@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MockForge Live Client | Dynamic OpenAPI & Data Visualizations</title>
+  <meta name="description" content="Production-grade frontend client connected to MockForge API with dynamic OpenAPI specification switching, real-time endpoints adaptation, and live data visualizations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div class="brand-logo">
+          <span class="logo-icon">⚡</span>
+        </div>
+        <div>
+          <div class="brand-title-row">
+            <h1 class="brand-title" id="val-spec-title">Tasks API</h1>
+            <span class="badge-version" id="val-spec-version">v1.0.0</span>
+          </div>
+          <span class="brand-subtitle" id="val-spec-desc">OpenAPI 3.0.3 Specification &bull; Live Dynamic Endpoints</span>
+        </div>
+      </div>
+
+      <div class="nav-telemetry">
+        <!-- 1-Click Active Spec Switcher -->
+        <div class="telemetry-pill spec-picker-pill" title="Switch active OpenAPI YAML contract">
+          <span class="pill-icon">📜</span>
+          <label for="nav-spec-select" class="pill-label">Spec:</label>
+          <select id="nav-spec-select" class="nav-spec-select">
+            <option value="tasks">Tasks API (samples/tasks.yaml)</option>
+            <option value="blog">Blog API (samples/blog.yaml)</option>
+            <option value="users">Users API (acceptance/fixtures/users.yaml)</option>
+            <option value="orders">Orders API (samples/orders.json)</option>
+            <option value="custom" id="opt-custom-spec" style="display:none">Custom Uploaded Spec</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn-header-action" id="btn-header-upload-spec" title="Upload or Paste custom OpenAPI/Swagger YAML spec">
+          <span>📤</span>
+          <span>Upload Spec</span>
+        </button>
+
+        <div class="telemetry-pill" id="pill-api-status" title="Target REST Server">
+          <span class="status-dot green pulse" id="dot-api"></span>
+          <span class="pill-label">API:</span>
+          <strong class="pill-value" id="val-api-endpoint">:3000</strong>
+        </div>
+
+        <div class="telemetry-pill" id="pill-latency-status" title="Live Roundtrip Network Latency">
+          <span class="pill-icon">⏱️</span>
+          <span class="pill-label">Latency:</span>
+          <strong class="pill-value" id="val-roundtrip-latency">12ms</strong>
+        </div>
+
+        <div class="telemetry-pill" id="pill-sync-status" title="Dual-Store Container Parity">
+          <span class="status-dot green" id="dot-sync"></span>
+          <span class="pill-value" id="val-sync-badge">100% In Sync</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Section 1: Dynamic Endpoints Banner (Updates according to active YAML spec) -->
+      <section class="endpoints-banner" id="section-endpoints">
+        <div class="endpoints-header">
+          <div class="endpoints-title-group">
+            <span class="endpoints-icon">⚡</span>
+            <div>
+              <h3>Active Spec Endpoints</h3>
+              <p id="endpoints-subtitle">5 endpoints dynamically generated from samples/tasks.yaml</p>
+            </div>
+          </div>
+          <div class="endpoints-filter-group" id="endpoints-filter-group">
+            <button class="filter-pill active" data-method="ALL">ALL (<span id="count-all-routes">5</span>)</button>
+            <button class="filter-pill" data-method="GET">GET</button>
+            <button class="filter-pill" data-method="POST">POST</button>
+            <button class="filter-pill" data-method="PUT">PUT</button>
+            <button class="filter-pill" data-method="PATCH">PATCH</button>
+            <button class="filter-pill" data-method="DELETE">DELETE</button>
+          </div>
+        </div>
+
+        <div class="endpoints-grid" id="endpoints-pills-container">
+          <!-- Dynamically populated from active YAML spec -->
+        </div>
+      </section>
+
+      <!-- Section 2: Dual-Store Container Memory Parity Bar -->
+      <section class="memory-parity-section" id="section-memory-parity">
+        <div class="memory-card container-a">
+          <div class="memory-card-header">
+            <div class="container-badge badge-mock">
+              <span>Container A</span> &bull; <strong>MockForge RAM</strong>
+            </div>
+            <span class="port-label">:3000</span>
+          </div>
+          <div class="memory-stat-row">
+            <span class="stat-number" id="count-mock-ram">0</span>
+            <span class="stat-desc" id="mock-entities-label">Active Entities in Memory</span>
+          </div>
+          <div class="memory-card-footer">
+            <span class="source-tag">Fastify In-Memory Engine</span>
+            <span class="session-tag" id="session-tag-val">session-prod-dev</span>
+          </div>
+        </div>
+
+        <!-- Sync Direction Bridge -->
+        <div class="sync-bridge-widget">
+          <div class="sync-arrows">
+            <span class="arrow-right" id="arrow-push" title="Push Memory to Real DB">➡️</span>
+            <div class="sync-pct-badge" id="sync-pct-display">100% Match</div>
+            <span class="arrow-left" id="arrow-pull" title="Reverse Pull Memory from Real DB">⬅️</span>
+          </div>
+          <span class="sync-bridge-caption">Bidirectional Docker Bridge (`mockforge-net`)</span>
+        </div>
+
+        <div class="memory-card container-b">
+          <div class="memory-card-header">
+            <div class="container-badge badge-real">
+              <span>Container B</span> &bull; <strong>Real Backend DB</strong>
+            </div>
+            <span class="port-label">:8080</span>
+          </div>
+          <div class="memory-stat-row">
+            <span class="stat-number" id="count-real-db">0</span>
+            <span class="stat-desc" id="real-entities-label">Ingested Database Records</span>
+          </div>
+          <div class="memory-card-footer">
+            <span class="source-tag">Node.js Real Production DB</span>
+            <span class="status-active">🟢 Active & Ingesting</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Live Data Visualizations & Analytics Dashboard -->
+      <section class="visualizations-section" id="section-visualizations">
+        <div class="viz-header">
+          <div class="viz-title-group">
+            <span class="viz-icon">📊</span>
+            <div>
+              <h3>Live Data Visualizations & Spec Analytics</h3>
+              <p>Real-time telemetry, in-memory entity composition, and latency waveform for the active YAML contract</p>
+            </div>
+          </div>
+          <span class="badge-live-pulse">LIVE TELEMETRY</span>
+        </div>
+
+        <div class="viz-grid">
+          <!-- Chart 1: In-Memory Entity Distribution -->
+          <div class="viz-card">
+            <div class="viz-card-header">
+              <span class="viz-card-title">In-Memory Entities by Resource</span>
+              <span class="viz-card-sub" id="viz-total-records-count">0 items in RAM</span>
+            </div>
+            <div class="bars-container" id="chart-entities-distribution">
+              <!-- Dynamically populated bars -->
+            </div>
+            <div class="viz-card-footer">
+              <span class="footer-legend-item"><span class="legend-dot emerald"></span> RAM Store</span>
+              <span class="footer-legend-item"><span class="legend-dot indigo"></span> Schema Bound</span>
+            </div>
+          </div>
+
+          <!-- Chart 2: HTTP Method Composition Radar -->
+          <div class="viz-card">
+            <div class="viz-card-header">
+              <span class="viz-card-title">Active Contract Operation Types</span>
+              <span class="viz-card-sub" id="viz-methods-ratio">5 Routes</span>
+            </div>
+            <div class="donut-row">
+              <div class="donut-chart-container">
+                <svg class="donut-svg" viewBox="0 0 100 100" id="svg-methods-donut">
+                  <circle cx="50" cy="50" r="38" class="donut-ring" />
+                  <!-- Dynamic SVG segments -->
+                </svg>
+                <div class="donut-center-label">
+                  <strong id="donut-center-val">5</strong>
+                  <span>OPS</span>
+                </div>
+              </div>
+              <div class="donut-legend" id="donut-legend-list">
+                <!-- Dynamic legend -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart 3: Realtime Latency Waveform -->
+          <div class="viz-card">
+            <div class="viz-card-header">
+              <span class="viz-card-title">Roundtrip Latency Timeline</span>
+              <span class="viz-card-sub font-mono" id="viz-avg-latency">Avg: 14ms</span>
+            </div>
+            <div class="sparkline-container">
+              <svg class="sparkline-svg" viewBox="0 0 360 80" preserveAspectRatio="none" id="svg-latency-sparkline">
+                <path d="M 0,80 L 360,80 Z" class="sparkline-area" id="sparkline-area-path" />
+                <path d="M 0,40 L 360,40" class="sparkline-line" id="sparkline-line-path" />
+              </svg>
+            </div>
+            <div class="sparkline-footer">
+              <span>0ms</span>
+              <span id="sparkline-peak">Peak: 24ms</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Action Toolbar -->
+      <section class="action-toolbar" id="toolbar-actions">
+        <div class="toolbar-left">
+          <button id="btn-seed-tasks" class="btn btn-emerald" title="Populate real-world demo records for active spec">
+            <span>🌱</span> <span id="label-seed-btn">Seed Real-World Tasks</span>
+          </button>
+          <button id="btn-open-create-modal" class="btn btn-primary" title="Create a new record via active POST endpoint">
+            <span>➕</span> <span id="label-new-btn">New Record</span>
+          </button>
+          <button id="btn-push-memory" class="btn btn-outline" title="Stream Container A RAM to Container B DB">
+            <span>🚀</span> Push Memory ➔ Real DB
+          </button>
+          <button id="btn-pull-memory" class="btn btn-outline" title="Reverse pull Real DB records into Mock RAM">
+            <span>📥</span> Reverse Pull ➔ Mock RAM
+          </button>
+          <button id="btn-seed-real-db" class="btn btn-secondary" title="Directly inject urgent task into Real Backend :8080">
+            <span>🗄️</span> Insert into Real DB
+          </button>
+        </div>
+
+        <div class="toolbar-right">
+          <button id="btn-toggle-latency" class="btn btn-ghost" title="Inject chaos latency (+400ms)">
+            <span>🎲</span> Chaos Latency: <strong id="chaos-latency-label">Off</strong>
+          </button>
+          <button id="btn-view-spec" class="btn btn-ghost" title="View OpenAPI YAML Contract">
+            <span>📄</span> View YAML Contract
+          </button>
+          <button id="btn-refresh" class="btn btn-icon" title="Refresh records from API">
+            <span>🔄</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Section 5: Dynamic Records Board -->
+      <section class="records-container" id="section-records-container">
+        <!-- Resource Tabs (e.g. 'Tasks' or 'Authors' & 'Posts' or 'Users') -->
+        <div class="resource-nav-bar" id="resource-nav-bar">
+          <div class="resource-tabs" id="resource-tabs-list">
+            <!-- Dynamic tabs -->
+          </div>
+          <span class="active-resource-count" id="active-resource-count">0 items loaded</span>
+        </div>
+
+        <!-- Dynamic Content Grid / Kanban / Table -->
+        <div class="dynamic-board-content" id="dynamic-board-content">
+          <!-- Populated dynamically based on active spec -->
+        </div>
+      </section>
+
+      <!-- Section 6: Live Network Request & Memory Activity Drawer -->
+      <section class="activity-drawer" id="section-activity-drawer">
+        <div class="drawer-header" id="drawer-toggle">
+          <div class="drawer-title-group">
+            <span class="drawer-icon">📡</span>
+            <h4>Live REST Activity & Memory Stream Log</h4>
+            <span class="badge-pill" id="badge-log-count">0 events</span>
+          </div>
+          <span class="drawer-toggle-arrow">▼</span>
+        </div>
+        <div class="drawer-body" id="drawer-log-body">
+          <div class="log-entries" id="network-log-entries">
+            <div class="log-row info">
+              <span class="log-time">[Boot]</span>
+              <span class="log-method">INIT</span>
+              <span class="log-url">Connected to MockForge at http://127.0.0.1:3000</span>
+              <span class="log-status">200 OK</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Create Record Modal (Dynamically adapts fields based on active spec) -->
+    <div class="modal-backdrop" id="modal-create-task" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="modal-create-title">Create New Record</h3>
+          <button class="btn-close" id="btn-close-create-modal">&times;</button>
+        </div>
+        <form id="form-create-task" class="modal-form">
+          <div id="dynamic-form-fields">
+            <!-- Dynamic input fields -->
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" id="btn-cancel-task">Cancel</button>
+            <button type="submit" class="btn btn-emerald" id="btn-submit-task">Create in Mock RAM</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- OpenAPI Specification Studio Modal -->
+    <div class="modal-backdrop" id="modal-spec-viewer" style="display: none;">
+      <div class="modal-card modal-large">
+        <div class="modal-header">
+          <div class="modal-title-with-badge">
+            <h3>OpenAPI Specification Studio</h3>
+            <span class="badge-spec" id="modal-active-spec-badge">samples/tasks.yaml</span>
+          </div>
+          <button class="btn-close" id="btn-close-spec-modal">&times;</button>
+        </div>
+
+        <!-- Studio Navigation Tabs -->
+        <div class="modal-studio-tabs">
+          <button type="button" class="studio-tab-btn active" id="tab-btn-presets">⚡ Presets</button>
+          <button type="button" class="studio-tab-btn" id="tab-btn-upload">📁 Upload File</button>
+          <button type="button" class="studio-tab-btn" id="tab-btn-editor">✍️ Edit / Paste YAML</button>
+        </div>
+
+        <div class="spec-modal-body">
+          <!-- TAB 1: PRESETS -->
+          <div id="studio-pane-presets" class="studio-pane active">
+            <div class="spec-preset-selector-row">
+              <label for="spec-select" style="font-size: 0.8rem; font-weight: 600; color: var(--text-dim);">Select Contract:</label>
+              <select id="spec-select" class="form-select inline-select">
+                <option value="tasks">samples/tasks.yaml (Tasks API - 5 endpoints)</option>
+                <option value="blog">samples/blog.yaml (Blog API - 8 endpoints)</option>
+                <option value="users">acceptance/fixtures/users.yaml (Users API - 6 endpoints)</option>
+                <option value="orders">samples/orders.json (Orders API - 4 endpoints)</option>
+              </select>
+            </div>
+            <pre class="yaml-code-view"><code id="code-spec-content">Loading OpenAPI specification...</code></pre>
+          </div>
+
+          <!-- TAB 2: UPLOAD FILE -->
+          <div id="studio-pane-upload" class="studio-pane" style="display: none;">
+            <div class="upload-dropzone" id="spec-dropzone">
+              <input type="file" id="input-spec-file" accept=".yaml,.yml,.json" style="display: none;">
+              <span class="dropzone-icon">📥</span>
+              <h4>Drag & drop OpenAPI / Swagger file here</h4>
+              <p>Supports .yaml, .yml, and .json specifications</p>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-browse-file">Browse File</button>
+            </div>
+            <div id="upload-file-details" class="file-details-card" style="display: none;">
+              <div class="file-details-info">
+                <span class="file-name" id="label-uploaded-filename">my-api.yaml</span>
+                <span class="file-meta" id="label-uploaded-meta">2.4 KB &bull; 84 lines</span>
+              </div>
+              <button type="button" class="btn-clear-file" id="btn-clear-uploaded-file">Clear</button>
+            </div>
+          </div>
+
+          <!-- TAB 3: EDIT / PASTE YAML -->
+          <div id="studio-pane-editor" class="studio-pane" style="display: none;">
+            <div class="editor-header-bar">
+              <span style="font-size: 0.75rem; color: var(--text-dim);">Paste or edit OpenAPI YAML / JSON:</span>
+              <span class="font-mono text-dim" id="label-editor-stats">0 lines</span>
+            </div>
+            <textarea id="textarea-spec-content" class="yaml-code-editor" rows="13" spellcheck="false" placeholder="openapi: 3.0.3&#10;info:&#10;  title: Custom API&#10;  version: 1.0.0&#10;paths:&#10;  /items:&#10;    get:&#10;      summary: List items&#10;      responses:&#10;        '200':&#10;          description: OK"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="justify-content: space-between;">
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" class="btn btn-emerald" id="btn-apply-spec-modal">
+              ⚡ Apply & Hot-Reload on MockForge
+            </button>
+            <span id="spec-apply-status" style="font-size: 0.76rem; color: var(--text-dim); display: none;"></span>
+          </div>
+          <button type="button" class="btn btn-outline" id="btn-close-spec-view">Close Studio</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

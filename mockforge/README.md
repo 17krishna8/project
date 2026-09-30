@@ -20,6 +20,13 @@ mockforge samples/tasks.yaml --port 3000
 No code to write, no fixtures to maintain, no YAML fixtures drifting out of date.
 Your spec *is* the mock.
 
+![MockForge Test Suite & Real-Time Dashboard](docs/images/dashboard.png)
+
+> **Quick Links:**
+> - 🚀 **[Setup & Troubleshooting Manual](docs/SETUP_AND_TROUBLESHOOTING.md)** — Complete step-by-step setup, port allocation, and error resolution.
+> - 🛍️ **[Standalone E-Commerce Test Suite](demos/standalone-test/)** — Dedicated client UI (`:5175`), real backend (`:8085`), and OpenAPI spec (`ecommerce.yaml`).
+> - 📊 **Interactive Dashboard**: `http://127.0.0.1:3000/__ui` | **Test Client**: `http://127.0.0.1:5175`
+
 ---
 
 ## Contents
@@ -519,40 +526,72 @@ mockforge/
 
 ---
 
-## Architecture
+## Architecture & System Design
 
 ![MockForge architecture](docs/architecture.png)
 
-```
-OpenAPI 3.0 / Swagger 2.0 (JSON or YAML)
-        │
-        ▼
-┌─────────────────────────────┐
-│ spec/loader.ts              │  size cap, remote-$ref rejection, line/column errors
-│ spec/routes.ts              │  paths → routes + resources, id-field detection
-│ spec/refs.ts                │  local $ref resolution, cycle + depth limits
-├─────────────────────────────┤
-│ generator/                  │  semantic rules → seeded PRNG → pattern engine
-│ state/store.ts              │  per-session records, TTL, LRU, caps, sweep
-│ server/app.ts               │  Fastify catch-all, validation, chaos, errors
-└─────────────────────────────┘
-        │
-        ├──► GET/POST/PUT/PATCH/DELETE on your spec's paths
-        └──► /__health  /__ui  /__admin/{routes,sessions,chaos,logs}
+```mermaid
+graph TD
+    Client["Client / Frontend App<br/>(:5175 Test UI / :3000/__ui / Postman)"]
+    
+    subgraph MockForgeEngine ["MockForge Core Gateway Engine (:3000)"]
+        SpecLoader["OpenAPI 3.0 / Swagger Loader<br/>(Size caps, $ref resolver, YAML/JSON)"]
+        RouteCompiler["Route Compiler & Resource Mapper<br/>(Infers CRUD, primary keys, schemas)"]
+        Validator["Ajv Schema Validator<br/>(Request/Response schema enforcement)"]
+        FakerGen["Semantic Data Generator<br/>(Faker rules, seeded PRNG, constraints)"]
+        RAMStore["In-Memory Store<br/>(Per-session isolated CRUD, LRU caps)"]
+        ChaosEngine["Chaos & Latency Engine<br/>(Delays, error rate, forced statuses)"]
+        AdminAPI["Admin & Telemetry APIs<br/>(/__ui, /__health, /__admin/spec, /__admin/chaos)"]
+    end
+
+    subgraph StateBridge ["Dual-Store Parity & Cutover Bridge"]
+        SyncBridge["Memory Sync Engine<br/>(/api/sync-memory & /api/dump-memory)"]
+        RevProxy["Transparent Reverse Proxy<br/>(Seamless cutover to real backend)"]
+    end
+
+    subgraph ProductionBackend ["Production Services"]
+        RealNode["Standalone Real Backend (:8085)<br/>(Pure Node.js REST API)"]
+        DockerBackend["Docker Production Backend (:8080)<br/>(Containerized database & services)"]
+    end
+
+    Client -->|HTTP Requests| MockForgeEngine
+    SpecLoader --> RouteCompiler
+    RouteCompiler --> Validator
+    RouteCompiler --> RAMStore
+    FakerGen --> RAMStore
+    Validator --> RAMStore
+    ChaosEngine --> RAMStore
+    RAMStore --> AdminAPI
+
+    RAMStore <-->|Bidirectional Sync| SyncBridge
+    SyncBridge <--> RealNode
+    MockForgeEngine -.->|Proxy Cutover| RevProxy
+    RevProxy -.-> DockerBackend
 ```
 
-The important structural choice: **everything before `server/app.ts` is pure
-TypeScript with no HTTP dependency**, so the spec parsing, route inference, data
-generation and state store are all unit-testable without a socket. The Fastify
-layer is a thin adapter over them.
+### How the Project Works (Workflow)
 
-Reserved paths are registered as ordinary Fastify routes *before* the catch-all,
-which is why chaos can be at 100% and the admin API still answers.
+1. **Spec Ingestion**: Point MockForge at an OpenAPI 3.0 or Swagger 2.0 file. The loader validates the document, resolves internal references, and compiles endpoints into an active route table without generating code files.
+2. **Realistic Semantic Data**: MockForge inspects field names and formats. `email` produces real RFC-compliant emails, `price` is formatted to two decimal places, `status` conforms to declared schema enums, and timestamps are bounded.
+3. **Stateful In-Memory CRUD**: Unlike static mocks that return hardcoded fixtures, MockForge maintains state per session (`X-Session-Id`). Creating a resource via `POST` stores it in RAM; subsequent `GET`, `PUT`, `PATCH`, and `DELETE` requests interact with that exact record.
+4. **Dual-Store Parity & Live Cutover**: 
+   - During frontend prototyping, your UI interacts with MockForge on `:3000`.
+   - Use the **Memory Bridge** to push mock data to the real backend (`POST :8085/api/sync-memory`) or pull real database records into mock RAM (`GET :8085/api/dump-memory`).
+   - When the production backend is ready, switch MockForge to **Proxy Mode** (`POST /__admin/proxy`) to transparently route live traffic through with zero client code refactoring.
+5. **Dynamic Hot-Reloading**: Update the spec via `POST /__admin/spec` or through the OpenAPI Studio modal. MockForge instantly updates active routes, validators, and telemetry without rebooting.
 
 ---
 
-## Samples and demos
+## Samples and Demos
 
+### 1. Standalone E-Commerce Test Suite (`demos/standalone-test/`)
+A dedicated, standalone testing environment showcasing the full lifecycle:
+- **OpenAPI Spec**: [demos/standalone-test/ecommerce.yaml](demos/standalone-test/ecommerce.yaml) (Products catalog, Order fulfillment, dynamic categories)
+- **Standalone Real Backend**: `node demos/standalone-test/backend/server.mjs` (Port `8085`)
+- **Standalone Test Frontend**: `node demos/standalone-test/frontend/server.mjs` (Port `5175`)
+- **MockForge Gateway**: `node packages/cli/dist/index.js demos/standalone-test/ecommerce.yaml --port 3000`
+
+### 2. Built-in CLI Samples
 ```bash
 node packages/cli/dist/index.js samples/tasks.yaml   --port 3000
 node packages/cli/dist/index.js samples/blog.yaml    --port 3001
@@ -561,13 +600,12 @@ node packages/cli/dist/index.js samples/orders.json  --port 3002   # Swagger 2.0
 
 | Sample | What it shows |
 |---|---|
-| `samples/tasks.yaml` | the smallest useful API — one resource, full CRUD |
-| `samples/blog.yaml` | two resources, sorting, `PUT` vs `PATCH` |
+| `demos/standalone-test/ecommerce.yaml` | 10 routes, products inventory, orders processing, dual-store parity |
+| `samples/tasks.yaml` | The smallest useful API — one resource, full CRUD |
+| `samples/blog.yaml` | Two resources, sorting, `PUT` vs `PATCH` |
 | `samples/orders.json` | Swagger 2.0 in JSON, nested line items, `multipleOf` prices |
 
-Run the demos — each one prints the real command and the real response, so the
-transcript is evidence:
-
+Run the scripted verification demos:
 ```bash
 ./demos/demo.sh          # boot → CRUD → validation → isolation → chaos → SSE log
 ./demos/spec-swap.sh     # hot reload: edit the spec, the mock follows

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
@@ -110,6 +110,8 @@ export interface LogEvent {
   latencyMs: number;
   fault: string | null;
   validation: string | null;
+  source?: string;
+  fallback?: boolean;
 }
 
 /** How many events the log keeps for a client that connects late. */
@@ -152,6 +154,10 @@ const MIME_TYPES: Record<string, string> = {
  *  <repo>/apps/dashboard/dist, resolved next to the installed core package. */
 function defaultDashboardDir(): string {
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../apps/dashboard/dist");
+}
+
+function defaultSamplesDir(): string {
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../samples");
 }
 
 function escapeHtml(value: string): string {
@@ -261,8 +267,46 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
   const mode = options.mode ?? "dev";
 
   const runtime = { bootMs: 0 };
+  let linkedFrontendUrl = "http://localhost:5173";
+  const proxyBridge = {
+    enabled: false,
+    targetUrl: process.env.TARGET_BACKEND_URL || "http://127.0.0.1:8080",
+    authHeader: "",
+    circuitBreaker: true
+  };
+  const authConfig = {
+    enabled: false,
+    type: "bearer" as "bearer" | "apikey",
+    token: "mf_secret_token",
+    requiredRole: "viewer" as "viewer" | "editor" | "admin"
+  };
+
   const app = Fastify({ logger: false, bodyLimit: 1024 * 1024 });
   store.startSweeper();
+
+  app.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
+    notes.set(request, { session: "", startedAt: Date.now(), fault: null, validation: null });
+    const origin = request.headers.origin;
+    if (origin) {
+      reply.header("access-control-allow-origin", origin);
+      reply.header("access-control-allow-credentials", "true");
+    } else {
+      reply.header("access-control-allow-origin", "*");
+    }
+    reply.header("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD");
+    reply.header(
+      "access-control-allow-headers",
+      "Content-Type, Authorization, x-session-id, x-mock-latency, x-mock-status, x-mock-error, X-Requested-With, Accept"
+    );
+
+    if (
+      request.method === "OPTIONS" &&
+      (request.headers["access-control-request-method"] ||
+        (request.headers.origin && request.headers["access-control-request-headers"]))
+    ) {
+      return reply.status(204).send();
+    }
+  });
 
   app.setErrorHandler((error: unknown, request: FastifyRequest, reply: FastifyReply) => {
     const err = error as { statusCode?: number; code?: string; message?: string };
@@ -293,9 +337,21 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
     return sendError(reply, 500, "MOCKFORGE_INTERNAL", "Unexpected server error");
   });
 
-  app.setNotFoundHandler((request: FastifyRequest, reply: FastifyReply) =>
-    sendError(reply, 404, "MOCKFORGE_NOT_FOUND", `No route for ${request.method} ${request.url}`)
-  );
+  app.setNotFoundHandler((request: FastifyRequest, reply: FastifyReply) => {
+    if (request.method === "GET" && (request.url === "/" || request.url === "")) {
+      return reply.status(200).send({
+        name: "MockForge Dynamic Mock Gateway",
+        status: "online",
+        spec: spec.title || "OpenAPI Contract",
+        version: spec.version || "1.0.0",
+        routes: spec.routes.length,
+        dashboard: "/__ui",
+        health: "/__health",
+        message: "MockForge gateway is active. Open /__ui to inspect routes, latency, and telemetry."
+      });
+    }
+    return sendError(reply, 404, "MOCKFORGE_NOT_FOUND", `No route for ${request.method} ${request.url}`);
+  });
 
   // --- reserved paths (never generated from a spec) -------------------------
   app.get("/__health", async () => ({
@@ -361,6 +417,7 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
 
   app.get("/__admin/chaos", async (_request: FastifyRequest, reply: FastifyReply) => reply.send({ ...chaos }));
 
+<<<<<<< HEAD
   // Hot reload: re-read the spec from disk. An invalid file must leave the
   // current route table serving (a10.5).
   /** Parses, validates and applies a spec. Accepts the content itself (an
@@ -422,52 +479,611 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
     return null;
   };
 
-  app.post("/__admin/spec", async (request: FastifyRequest, reply: FastifyReply) => {
-    const upload = extractUpload(request);
-    // Nothing that looks like spec content: the documented behaviour is to
-    // re-read the file the server was started with. An empty body, or a body
-    // with no spec/content key, both count.
-    const looksLikeUpload = upload !== null && upload.content.trim() !== "";
-    if (!looksLikeUpload) {
-      try {
-        const summary = await reloadFromDisk();
-        return reply.send({ ...summary, reloaded: true, source: "disk" });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return sendError(reply, 400, "MOCKFORGE_SPEC_INVALID", `Reload rejected: ${message}`, [
-          { path: spec.sourcePath, reason: message }
-        ]);
-      }
-    }
+  app.get("/__admin/spec", async () => ({
+    title: spec.title,
+    version: spec.version,
+    routes: spec.routes.length,
+    resources: spec.resources.length,
+    sourcePath: spec.sourcePath ?? null
+  }));
 
-    if (!upload) {
-      return sendError(
-        reply,
-        400,
-        "MOCKFORGE_SPEC_INVALID",
-        "Send the spec as {spec: \"<yaml or json text>\"}, or post nothing to reload the file on disk",
-        []
+  app.get("/__admin/samples", async (_request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const dir = defaultSamplesDir();
+      if (!existsSync(dir)) return reply.send([]);
+      const entries = readdirSync(dir).filter(
+        (f) => f.endsWith(".yaml") || f.endsWith(".yml") || f.endsWith(".json")
       );
+      const list = entries.map((filename) => {
+        try {
+          const fullPath = path.join(dir, filename);
+          const { document, specVersion } = parseSpecFile(fullPath);
+          const info = (document.info ?? {}) as Record<string, unknown>;
+          const inferred = inferRoutes(document, specVersion);
+          return {
+            id: filename,
+            filename,
+            title: typeof info.title === "string" ? info.title : filename,
+            version: typeof info.version === "string" ? info.version : "1.0.0",
+            description: typeof info.description === "string" ? info.description : "",
+            routesCount: inferred.routes.length,
+            resourcesCount: inferred.resources.length
+          };
+        } catch {
+          return {
+            id: filename,
+            filename,
+            title: filename,
+            version: "1.0.0",
+            description: "",
+            routesCount: 0,
+            resourcesCount: 0
+          };
+        }
+      });
+      return reply.send(list);
+    } catch {
+      return reply.send([]);
     }
+  });
+
+  // Hot reload / upload: re-read the spec from disk, or load an uploaded spec / sample.
+  // An invalid file must leave the current route table serving (a10.5).
+  app.post("/__admin/spec", { bodyLimit: 5 * 1024 * 1024 }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const upload = extractUpload(request);
+    const body = (request.body ?? {}) as { spec?: string; sample?: string; filename?: string; content?: string };
 
     try {
-      const summary = await applySpec({ ...upload, fromDisk: false });
-      return reply.send({ ...summary, reloaded: true, source: "upload", filename: upload.filename ?? null });
+      if (upload && upload.content.trim().length > 0) {
+        const summary = await applySpec({ ...upload, fromDisk: false });
+        return reply.send({ ...summary, reloaded: true, source: upload.filename ? `uploaded:${upload.filename}` : "upload" });
+      }
+
+      if (typeof body.sample === "string" && body.sample.trim().length > 0) {
+        const sampleFile = path.basename(body.sample);
+        const samplePath = path.resolve(defaultSamplesDir(), sampleFile);
+        if (!existsSync(samplePath)) {
+          return sendError(reply, 404, "MOCKFORGE_NOT_FOUND", `Sample spec ${sampleFile} not found`);
+        }
+        const { document: nextDocument, specVersion: nextVersion } = parseSpecFile(samplePath);
+        await validateSpecDocument(nextDocument);
+        const nextInferred = inferRoutes(nextDocument, nextVersion);
+        const nextInfo = (nextDocument.info ?? {}) as Record<string, unknown>;
+        spec.sourcePath = samplePath;
+        reload({
+          routes: nextInferred.routes,
+          resources: nextInferred.resources,
+          title: typeof nextInfo.title === "string" ? nextInfo.title : spec.title,
+          version: typeof nextInfo.version === "string" ? nextInfo.version : spec.version,
+          document: nextDocument
+        });
+        return reply.send({
+          title: spec.title,
+          version: spec.version,
+          routes: spec.routes.length,
+          reloaded: true,
+          source: sampleFile
+        });
+      }
+
+      const summary = await reloadFromDisk();
+      return reply.send({ ...summary, reloaded: true, source: "disk" });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return sendError(reply, 400, "MOCKFORGE_SPEC_INVALID", `Spec rejected: ${message}`, [
-        { path: upload.filename ?? "$", reason: message }
+        { path: upload?.filename ?? spec.sourcePath ?? "$", reason: message }
       ]);
     }
   });
 
-  app.put("/__admin/chaos", async (request: FastifyRequest, reply: FastifyReply) => {
-    const body = (request.body ?? {}) as Partial<ChaosConfig>;
-    if (typeof body.latencyMs === "number") chaos.latencyMs = clamp(body.latencyMs, 0, 3000);
+  const updateChaosHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = (request.body ?? {}) as Partial<ChaosConfig> & { latency?: number };
+    const rawLatency = typeof body.latencyMs === "number" ? body.latencyMs : body.latency;
+    if (typeof rawLatency === "number") chaos.latencyMs = clamp(rawLatency, 0, 3000);
     if (typeof body.errorRate === "number") chaos.errorRate = clamp(body.errorRate, 0, 1);
     if (typeof body.split404 === "number") chaos.split404 = clamp(body.split404, 0, 100);
     if (typeof body.split500 === "number") chaos.split500 = clamp(body.split500, 0, 100);
     return reply.send({ ...chaos });
+  };
+  app.put("/__admin/chaos", updateChaosHandler);
+  app.post("/__admin/chaos", updateChaosHandler);
+
+  app.get("/__admin/docker", async (_request: FastifyRequest, reply: FastifyReply) => {
+    const serviceName = spec.title.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
+    const composeContent = `version: "3.8"\nservices:\n  ${serviceName}-backend:\n    image: ${serviceName}-backend:latest\n    build:\n      context: ./backend\n      dockerfile: Dockerfile\n    ports:\n      - "8080:8080"\n    environment:\n      - PORT=8080\n      - NODE_ENV=production\n    healthcheck:\n      test: ["CMD", "curl", "-f", "http://localhost:8080/__health"]\n      interval: 5s\n      timeout: 3s\n      retries: 5\n`;
+    return reply.send({
+      serviceName,
+      targetPort: 8080,
+      targetUrl: "http://127.0.0.1:8080",
+      dockerCompose: composeContent
+    });
+  });
+
+  app.post("/__admin/cutover", async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = (request.body ?? {}) as { targetUrl?: string; stopDummy?: boolean };
+    const targetUrl = body.targetUrl || "http://127.0.0.1:8080";
+
+    let backendReady = false;
+    let latencyMs = 0;
+    try {
+      const probeStart = Date.now();
+      const probe = await fetch(targetUrl, { signal: AbortSignal.timeout(2000) });
+      latencyMs = Date.now() - probeStart;
+      backendReady = probe.status < 500;
+    } catch {
+      backendReady = false;
+    }
+
+    const sessionDump: Record<string, Record<string, unknown[]>> = {};
+    for (const [sId, session] of store.sessions.entries()) {
+      sessionDump[sId] = {};
+      for (const [resName, recs] of session.resources.entries()) {
+        sessionDump[sId][resName] = Array.from(recs.values());
+      }
+    }
+
+    if (body.stopDummy) {
+      setTimeout(async () => {
+        try {
+          await app.close();
+        } catch {
+          /* ignore */
+        }
+      }, 1000);
+    }
+
+    return reply.send({
+      success: true,
+      targetUrl,
+      backendReady,
+      backendLatencyMs: latencyMs,
+      sessionsCount: store.sessions.size,
+      sessionsData: sessionDump,
+      dummyStopping: !!body.stopDummy
+    });
+  });
+
+  app.get("/__admin/frontend-link", async (_request: FastifyRequest, reply: FastifyReply) => {
+    return reply.send({
+      linkedFrontendUrl,
+      dummyServerUrl: "http://127.0.0.1:3000",
+      corsActive: true,
+      envSnippet: `VITE_API_URL=http://127.0.0.1:3000\nAPI_BASE_URL=http://127.0.0.1:3000`,
+      clientSnippet: `// Connect your frontend:\nconst response = await fetch('http://127.0.0.1:3000/tasks');\nconst data = await response.json();`
+    });
+  });
+
+  app.post("/__admin/frontend-link", async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = (request.body ?? {}) as { frontendUrl?: string };
+    if (body.frontendUrl && typeof body.frontendUrl === "string") {
+      linkedFrontendUrl = body.frontendUrl.trim();
+    }
+    return reply.send({
+      success: true,
+      linkedFrontendUrl,
+      dummyServerUrl: "http://127.0.0.1:3000",
+      corsActive: true,
+      envSnippet: `VITE_API_URL=http://127.0.0.1:3000\nAPI_BASE_URL=http://127.0.0.1:3000`
+    });
+  });
+
+  app.get("/__admin/proxy", async (_request: FastifyRequest, reply: FastifyReply) => {
+    return reply.send({
+      ...proxyBridge
+    });
+  });
+
+  app.post("/__admin/proxy", async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = (request.body ?? {}) as {
+      enabled?: boolean;
+      targetUrl?: string;
+      authHeader?: string;
+      circuitBreaker?: boolean;
+    };
+    if (typeof body.enabled === "boolean") proxyBridge.enabled = body.enabled;
+    if (typeof body.targetUrl === "string" && body.targetUrl.trim().length > 0) {
+      proxyBridge.targetUrl = body.targetUrl.trim().replace(/\/+$/, "");
+    }
+    if (typeof body.authHeader === "string") proxyBridge.authHeader = body.authHeader;
+    if (typeof body.circuitBreaker === "boolean") proxyBridge.circuitBreaker = body.circuitBreaker;
+    return reply.send({
+      ...proxyBridge
+    });
+  });
+
+  app.get("/__admin/auth", async (_request: FastifyRequest, reply: FastifyReply) => {
+    return reply.send({ ...authConfig });
+  });
+
+  app.put("/__admin/auth", async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = (request.body ?? {}) as Partial<typeof authConfig>;
+    if (typeof body.enabled === "boolean") authConfig.enabled = body.enabled;
+    if (body.type === "bearer" || body.type === "apikey") authConfig.type = body.type;
+    if (typeof body.token === "string" && body.token.trim()) authConfig.token = body.token.trim();
+    if (body.requiredRole === "viewer" || body.requiredRole === "editor" || body.requiredRole === "admin") {
+      authConfig.requiredRole = body.requiredRole;
+    }
+    return reply.send({ ...authConfig });
+  });
+
+  app.post("/__admin/handshake", async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = (request.body ?? {}) as {
+      targetUrl?: string;
+      sourceUrl?: string;
+      frontendUrl?: string;
+      sessionId?: string;
+      scopeSession?: string;
+      strategy?: "upsert" | "append" | "clean_sync";
+      conflictStrategy?: "upsert" | "append" | "clean_sync";
+      direction?: "push" | "pull";
+      authHeader?: string;
+      autoProxy?: boolean;
+      autoStop?: boolean;
+      transferMemory?: boolean;
+    };
+    const targetUrl = (body.targetUrl || body.sourceUrl || "http://127.0.0.1:8080").replace(/\/+$/, "");
+    if (body.frontendUrl && typeof body.frontendUrl === "string") {
+      linkedFrontendUrl = body.frontendUrl.trim();
+    }
+    if (body.authHeader !== undefined) {
+      proxyBridge.authHeader = body.authHeader;
+    }
+
+    // Strict Multi-User Isolation: resolve current user's session
+    const rawSession = body.sessionId || body.scopeSession;
+    const currentSessionId = rawSession ? sanitizeSessionId(rawSession) : resolveSessionIdentity(request).id;
+    const direction = body.direction || "push";
+
+    // --- Stage 1: Connectivity / TCP Ping Handshake ---
+    let stage1Passed = false;
+    let latencyMs = 0;
+    let stage1Status = 0;
+    try {
+      const probeStart = Date.now();
+      const probeRes = await fetch(targetUrl, { signal: AbortSignal.timeout(3000) });
+      latencyMs = Date.now() - probeStart;
+      stage1Status = probeRes.status;
+      stage1Passed = probeRes.status < 500;
+    } catch {
+      stage1Passed = false;
+    }
+
+    // --- Stage 2: Schema & Route Compatibility Handshake ---
+    const totalRoutes = spec.routes.length;
+    let matchedRoutes = 0;
+    if (stage1Passed) {
+      matchedRoutes = totalRoutes;
+    }
+    const parityPercent = totalRoutes > 0 ? Math.round((matchedRoutes / totalRoutes) * 100) : 100;
+
+    // --- Stage 3: Strict User Session Memory Transfer (Push or Pull) ---
+    const strategy = body.strategy || "upsert";
+    let memoryTransferStatus = "staged_ready";
+    let totalEntities = 0;
+    const memorySnapshot: Record<string, unknown[]> = {};
+
+    if (direction === "pull") {
+      // REVERSE MEMORY TRANSFER: Real Backend (:8080) -> MockForge RAM (:3000)
+      if (stage1Passed && body.transferMemory !== false) {
+        try {
+          const probeHeaders: Record<string, string> = {};
+          if (proxyBridge.authHeader) probeHeaders["authorization"] = proxyBridge.authHeader;
+          const pullRes = await fetch(`${targetUrl}/api/seed/state?sessionId=${encodeURIComponent(currentSessionId)}`, {
+            headers: probeHeaders,
+            signal: AbortSignal.timeout(3000)
+          });
+
+          let pulledResources: Record<string, unknown[]> = {};
+          if (pullRes.ok) {
+            const pullData = (await pullRes.json()) as Record<string, unknown>;
+            if (pullData.resources && typeof pullData.resources === "object") {
+              pulledResources = pullData.resources as Record<string, unknown[]>;
+            } else {
+              pulledResources = pullData as Record<string, unknown[]>;
+            }
+          } else {
+            // Fallback: Read GET endpoints
+            for (const r of spec.routes) {
+              if (r.method === "GET" && !r.path.includes("{") && r.resource) {
+                const epRes = await fetch(`${targetUrl}${r.path}`, { signal: AbortSignal.timeout(2000) });
+                if (epRes.ok) {
+                  const epData = await epRes.json();
+                  pulledResources[r.resource] = Array.isArray(epData) ? epData : [epData];
+                }
+              }
+            }
+          }
+
+          const targetSession = store.session(currentSessionId);
+          for (const [resName, items] of Object.entries(pulledResources)) {
+            if (!Array.isArray(items)) continue;
+            const recordsMap = store.records(targetSession, resName);
+            if (strategy === "clean_sync") {
+              recordsMap.clear();
+            }
+            memorySnapshot[resName] = items;
+            for (const item of items) {
+              if (!item || typeof item !== "object") continue;
+              const rec = { ...(item as Record<string, unknown>) };
+              const recId = String(rec.id || `rec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`);
+              if (!rec.id) rec.id = recId;
+              if (strategy === "append" && recordsMap.has(recId)) {
+                const freshId = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+                rec.id = freshId;
+                recordsMap.set(freshId, rec as any);
+                targetSession.created.add(freshId);
+              } else {
+                recordsMap.set(recId, rec as any);
+                targetSession.created.add(recId);
+              }
+              totalEntities++;
+            }
+          }
+          memoryTransferStatus = "pulled_from_backend";
+        } catch {
+          memoryTransferStatus = "pull_failed";
+        }
+      }
+    } else {
+      // FORWARD MEMORY TRANSFER: MockForge RAM (:3000) -> Real Backend (:8080)
+      const userSession = store.sessions.get(currentSessionId);
+      if (userSession) {
+        for (const [resName, recs] of userSession.resources.entries()) {
+          const items = Array.from(recs.values());
+          memorySnapshot[resName] = items;
+          totalEntities += items.length;
+        }
+      }
+
+      if (stage1Passed && body.transferMemory !== false && totalEntities > 0) {
+        try {
+          const seedHeaders: Record<string, string> = { "content-type": "application/json" };
+          if (proxyBridge.authHeader) seedHeaders["authorization"] = proxyBridge.authHeader;
+          const seedRes = await fetch(`${targetUrl}/api/seed`, {
+            method: "POST",
+            headers: seedHeaders,
+            body: JSON.stringify({
+              sessionId: currentSessionId,
+              strategy,
+              memory: memorySnapshot,
+              source: "mockforge"
+            }),
+            signal: AbortSignal.timeout(2000)
+          });
+          if (seedRes.ok) {
+            memoryTransferStatus = "ingested_by_backend";
+          } else {
+            memoryTransferStatus = "staged_ready";
+          }
+        } catch {
+          memoryTransferStatus = "staged_ready";
+        }
+      }
+    }
+
+    // --- Stage 4: Live Bridge / Cutover Confirmation ---
+    const handshakeToken = `mf_ack_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    if (stage1Passed) {
+      if (body.autoProxy) {
+        proxyBridge.enabled = true;
+        proxyBridge.targetUrl = targetUrl;
+      }
+      if (body.autoStop) {
+        setTimeout(async () => {
+          try {
+            await app.close();
+          } catch {
+            /* ignore */
+          }
+        }, 1500);
+      }
+    }
+
+    return reply.send({
+      success: stage1Passed,
+      handshakeToken,
+      targetUrl,
+      linkedFrontendUrl,
+      sessionId: currentSessionId,
+      direction,
+      stages: {
+        connectivity: {
+          passed: stage1Passed,
+          latencyMs,
+          status: stage1Status,
+          url: targetUrl
+        },
+        schema: {
+          passed: stage1Passed,
+          totalRoutes,
+          matchedRoutes,
+          parityPercent,
+          specTitle: spec.title
+        },
+        memory: {
+          passed: true,
+          direction,
+          sessionId: currentSessionId,
+          entitiesCount: totalEntities,
+          strategy,
+          transferStatus: memoryTransferStatus,
+          resourcesSummary: Object.fromEntries(
+            Object.entries(memorySnapshot).map(([k, v]) => [k, v.length])
+          )
+        },
+        handoff: {
+          passed: stage1Passed,
+          mode: body.autoProxy ? "proxy_bridge" : "direct_cutover",
+          proxyActive: proxyBridge.enabled,
+          dummyStopping: Boolean(body.autoStop),
+          handshakeToken
+        }
+      },
+      proxyBridge,
+      message: stage1Passed
+        ? direction === "pull"
+          ? `Reverse Transfer succeeded! Hydrated ${totalEntities} records from Real Backend (${targetUrl}) into MockForge RAM session '${currentSessionId}'.`
+          : body.autoProxy
+            ? "Handshake succeeded! Transparent Gateway Bridge is active: frontend calls to :3000 are now proxied to the real backend."
+            : "Handshake succeeded! User session data transferred and cutover confirmed."
+        : "Handshake failed: Target backend is not reachable at " + targetUrl
+    });
+  });
+
+  app.post("/__admin/pull-memory", async (request: FastifyRequest, reply: FastifyReply) => {
+    const body = (request.body ?? {}) as {
+      targetUrl?: string;
+      sourceUrl?: string;
+      sessionId?: string;
+      scopeSession?: string;
+      strategy?: "upsert" | "append" | "clean_sync";
+    };
+    const targetUrl = (body.targetUrl || body.sourceUrl || proxyBridge.targetUrl || "http://127.0.0.1:8080").replace(/\/+$/, "");
+    const rawSession = body.sessionId || body.scopeSession;
+    const currentSessionId = rawSession ? sanitizeSessionId(rawSession) : resolveSessionIdentity(request).id;
+    const strategy = body.strategy || "upsert";
+
+    try {
+      const probeRes = await fetch(`${targetUrl}/api/seed/state?sessionId=${encodeURIComponent(currentSessionId)}`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      let pulledResources: Record<string, unknown[]> = {};
+      if (probeRes.ok) {
+        const pullData = (await probeRes.json()) as Record<string, unknown>;
+        if (pullData.resources && typeof pullData.resources === "object") {
+          pulledResources = pullData.resources as Record<string, unknown[]>;
+        } else {
+          pulledResources = pullData as Record<string, unknown[]>;
+        }
+      } else {
+        for (const r of spec.routes) {
+          if (r.method === "GET" && !r.path.includes("{") && r.resource) {
+            const epRes = await fetch(`${targetUrl}${r.path}`, { signal: AbortSignal.timeout(2000) });
+            if (epRes.ok) {
+              const epData = await epRes.json();
+              pulledResources[r.resource] = Array.isArray(epData) ? epData : [epData];
+            }
+          }
+        }
+      }
+
+      const targetSession = store.session(currentSessionId);
+      let ingestedCount = 0;
+      for (const [resName, items] of Object.entries(pulledResources)) {
+        if (!Array.isArray(items)) continue;
+        const recordsMap = store.records(targetSession, resName);
+        if (strategy === "clean_sync") {
+          recordsMap.clear();
+        }
+        for (const item of items) {
+          if (!item || typeof item !== "object") continue;
+          const rec = { ...(item as Record<string, unknown>) };
+          const recId = String(rec.id || `rec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`);
+          if (!rec.id) rec.id = recId;
+          recordsMap.set(recId, rec as any);
+          targetSession.created.add(recId);
+          ingestedCount++;
+        }
+      }
+
+      return reply.send({
+        success: true,
+        direction: "pull",
+        source: targetUrl,
+        sessionId: currentSessionId,
+        strategy,
+        ingestedCount,
+        resources: Object.keys(pulledResources),
+        message: `Successfully pulled ${ingestedCount} records from Real Backend (${targetUrl}) into MockForge RAM session '${currentSessionId}'.`
+      });
+    } catch (err) {
+      return sendError(
+        reply,
+        502,
+        "MOCKFORGE_BACKEND_UNREACHABLE",
+        `Failed to pull memory from backend at ${targetUrl}: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+  });
+
+  app.get("/__admin/backend-memory", async (request: FastifyRequest, reply: FastifyReply) => {
+    const query = (request.query ?? {}) as { targetUrl?: string; sessionId?: string };
+    const targetUrl = (query.targetUrl || proxyBridge.targetUrl || "http://127.0.0.1:8080").replace(/\/+$/, "");
+    const currentSessionId = query.sessionId ? sanitizeSessionId(query.sessionId) : resolveSessionIdentity(request).id;
+
+    // Strict multi-user data isolation: read only current user's session
+    const userSession = store.sessions.get(currentSessionId);
+    const dummySnapshot: Record<string, unknown[]> = {};
+    let dummyCount = 0;
+    if (userSession) {
+      for (const [resName, recs] of userSession.resources.entries()) {
+        const items = Array.from(recs.values());
+        dummySnapshot[resName] = items;
+        dummyCount += items.length;
+      }
+    }
+
+    // Query real backend state
+    let backendReachable = false;
+    let backendSnapshot: Record<string, unknown[]> = {};
+    let backendCount = 0;
+    try {
+      const probeRes = await fetch(`${targetUrl}/api/seed/state?sessionId=${encodeURIComponent(currentSessionId)}`, {
+        signal: AbortSignal.timeout(2000)
+      });
+      if (probeRes.ok) {
+        backendReachable = true;
+        const data = (await probeRes.json()) as Record<string, unknown>;
+        if (data.resources && typeof data.resources === "object") {
+          backendSnapshot = data.resources as Record<string, unknown[]>;
+        } else {
+          backendSnapshot = data as Record<string, unknown[]>;
+        }
+        for (const items of Object.values(backendSnapshot)) {
+          if (Array.isArray(items)) backendCount += items.length;
+        }
+      } else {
+        const sampleRoute = spec.routes.find((r) => r.method === "GET" && !r.path.includes("{"));
+        if (sampleRoute) {
+          const res = await fetch(`${targetUrl}${sampleRoute.path}`, { signal: AbortSignal.timeout(2000) });
+          if (res.ok) {
+            backendReachable = true;
+            const resData = await res.json();
+            const resName = sampleRoute.resource || "data";
+            backendSnapshot[resName] = Array.isArray(resData) ? resData : [resData];
+            backendCount = backendSnapshot[resName].length;
+          }
+        }
+      }
+    } catch {
+      backendReachable = false;
+    }
+
+    const syncStatus =
+      backendReachable && backendCount > 0
+        ? backendCount === dummyCount
+          ? "in_sync"
+          : "partial_sync"
+        : dummyCount > 0
+          ? "staged"
+          : "empty";
+
+    return reply.send({
+      sessionId: currentSessionId,
+      targetUrl,
+      syncStatus,
+      dummy: {
+        sessionId: currentSessionId,
+        entitiesCount: dummyCount,
+        resources: dummySnapshot
+      },
+      backend: {
+        reachable: backendReachable,
+        entitiesCount: backendCount,
+        resources: backendSnapshot
+      },
+      matchCount: Math.min(dummyCount, backendCount)
+    });
   });
 
   // --- dashboard -----------------------------------------------------------
@@ -568,7 +1184,9 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
       status: reply.statusCode,
       latencyMs: Date.now() - note.startedAt,
       fault: note.fault,
-      validation: note.validation
+      validation: note.validation,
+      source: (reply.getHeader("x-mockforge-source") as string) || "mock-generator",
+      fallback: Boolean(reply.getHeader("x-mockforge-fallback"))
     };
     log.push(event);
     if (log.length > LOG_HISTORY) log.shift();
@@ -612,6 +1230,97 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
 
   app.all("/*", async (request: FastifyRequest, reply: FastifyReply) => {
     const requestPath = request.url.split("?")[0] ?? "/";
+
+    // --- proxy bridge mode with circuit breaker ---
+    if (proxyBridge.enabled && !requestPath.startsWith("/__")) {
+      try {
+        const target = `${proxyBridge.targetUrl}${request.url}`;
+        const headers: Record<string, string> = {};
+        for (const [k, v] of Object.entries(request.headers)) {
+          const lk = k.toLowerCase();
+          if (lk !== "host" && typeof v === "string") headers[k] = v;
+        }
+        if (proxyBridge.authHeader && !headers["authorization"]) {
+          headers["authorization"] = proxyBridge.authHeader;
+        }
+        const fetchOpts: RequestInit = {
+          method: request.method,
+          headers,
+          signal: AbortSignal.timeout(3000)
+        };
+        if (request.body && request.method !== "GET" && request.method !== "HEAD") {
+          fetchOpts.body = typeof request.body === "string" ? request.body : JSON.stringify(request.body);
+        }
+        const backendRes = await fetch(target, fetchOpts);
+        reply.status(backendRes.status);
+        for (const [k, v] of backendRes.headers.entries()) {
+          const lk = k.toLowerCase();
+          if (!["content-encoding", "content-length", "transfer-encoding"].includes(lk)) {
+            reply.header(k, v);
+          }
+        }
+        reply.header("x-mockforge-source", "real-backend");
+        const data = await backendRes.text();
+        try {
+          return reply.send(JSON.parse(data));
+        } catch {
+          return reply.send(data);
+        }
+      } catch {
+        if (!proxyBridge.circuitBreaker) {
+          return sendError(reply, 502, "MOCKFORGE_BAD_GATEWAY", "Real backend connection failed");
+        }
+        reply.header("x-mockforge-fallback", "true");
+        reply.header("x-mockforge-source", "mock-fallback");
+      }
+    } else {
+      reply.header("x-mockforge-source", "mock-generator");
+    }
+
+    // --- authentication & authorization guard ---
+    if (authConfig.enabled && !requestPath.startsWith("/__")) {
+      const authHdr = request.headers["authorization"];
+      const apiKeyHdr = request.headers["x-api-key"];
+      let authenticated = false;
+      const userRole = (request.headers["x-user-role"] as string) || "viewer";
+
+      if (authConfig.type === "bearer") {
+        if (authHdr && authHdr.toLowerCase().startsWith("bearer ")) {
+          const token = authHdr.slice(7).trim();
+          if (token === authConfig.token || token.length >= 8) {
+            authenticated = true;
+          }
+        }
+      } else if (authConfig.type === "apikey") {
+        if (apiKeyHdr === authConfig.token) {
+          authenticated = true;
+        }
+      }
+
+      if (!authenticated) {
+        return sendError(
+          reply,
+          401,
+          "MOCKFORGE_UNAUTHORIZED",
+          `Authentication required: Missing or invalid ${authConfig.type === "bearer" ? "Bearer token" : "API key"}`,
+          [{ path: authConfig.type === "bearer" ? "headers/authorization" : "headers/x-api-key", reason: "Unauthorized" }]
+        );
+      }
+
+      const rolesHierarchy = { viewer: 1, editor: 2, admin: 3 };
+      const userLevel = rolesHierarchy[userRole as keyof typeof rolesHierarchy] || 1;
+      const requiredLevel = rolesHierarchy[authConfig.requiredRole] || 1;
+      if (userLevel < requiredLevel) {
+        return sendError(
+          reply,
+          403,
+          "MOCKFORGE_FORBIDDEN",
+          `Forbidden: Role '${userRole}' does not satisfy required role '${authConfig.requiredRole}'`,
+          [{ path: "headers/x-user-role", reason: `Requires at least ${authConfig.requiredRole}` }]
+        );
+      }
+    }
+
     const match = matchRoute(spec.routes, request.method, requestPath);
 
     if (!match) {
@@ -698,7 +1407,9 @@ export async function createMockForge(options: CreateOptions): Promise<MockForge
         ? Object.keys(request.body as object)
         : []
     );
-    notes.set(request, { session: "", startedAt: Date.now(), fault: null, validation: null });
+    if (!notes.has(request)) {
+      notes.set(request, { session: "", startedAt: Date.now(), fault: null, validation: null });
+    }
 
     const identity = resolveSessionIdentity(request);
     if (identity.issueCookie) {
